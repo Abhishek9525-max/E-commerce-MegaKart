@@ -8,7 +8,6 @@ function App() {
     <Routes>
       <Route path= '/' element={<UserLayout />}>
         {/* user layout */}
-        {/* try */}
       </Route>
       <Route>
         {/* admin layout */}
