@@ -1,26 +1,58 @@
 import React, { useEffect, useState } from 'react'
+import { toast } from 'sonner';
+import ProductGrid from './ProductGrid';
 
 
-  const selectedProduct = {
-    name: 'Stylish Jacket',
-    price: 120,
-    originalPrice: 150,
-    description: 'This is stylish jacket for any occasion',
-    brand: 'FashionBrand',
-    material: 'Leather',
-    sizes: ['S', 'M', 'L', 'XL'],
-    colors: ['Red', 'Black'],
-    images: [
-      {
-        url: 'https://picsum.photos/500/500?random=1',
-        altText: 'Stylish jacket 1'
-      },
-      {
-        url: 'https://picsum.photos/500/500?random=2',
-        altText: 'Stylish jacket 2'
-      },
-    ],
+const selectedProduct = {
+  name: 'Stylish Jacket',
+  price: 120,
+  originalPrice: 150,
+  description: 'This is stylish jacket for any occasion',
+  brand: 'FashionBrand',
+  material: 'Leather',
+  sizes: ['S', 'M', 'L', 'XL'],
+  colors: ['Red', 'Black'],
+  images: [
+    {
+      url: 'https://picsum.photos/500/500?random=1',
+      altText: 'Stylish jacket 1'
+    },
+    {
+      url: 'https://picsum.photos/500/500?random=2',
+      altText: 'Stylish jacket 2'
+    },
+  ],
 };
+
+
+const similarProducts=[
+  {
+    id:1,
+    name:'Product 1',
+    price:100,
+    images:[{url: 'https://picsum.photos/500/500?random=1'}]
+  },
+  {
+    id:2,
+    name:'Product 2',
+    price:100,
+    images:[{url: 'https://picsum.photos/500/500?random=2'}]
+  },
+  {
+    id:3,
+    name:'Product 3',
+    price:100,
+    images:[{url: 'https://picsum.photos/500/500?random=3'}]
+  },
+  {
+    id:4,
+    name:'Product 4',
+    price:100,
+    images:[{url: 'https://picsum.photos/500/500?random=4'}]
+  }
+]
+
+
 const ProductDetails = () => {
   const [mainImage, setMainImage] = useState("");
   const [selectedSize, setselectedSize] = useState('')
@@ -34,11 +66,29 @@ const ProductDetails = () => {
     }
   }, [selectedProduct]);
 
-const handleQuantityChange=(action)=>{
-  if(action === 'plus') setQuantity((prev) => prev+1)
-  if(action === 'minus' && quantity>1) setQuantity((prev) => prev-1)
-}
+  const handleQuantityChange = (action) => {
+    if (action === 'plus') setQuantity((prev) => prev + 1)
+    if (action === 'minus' && quantity > 1) setQuantity((prev) => prev - 1)
+  }
+  const handleAddToCart = () => {
+    if (!selectedSize || !selectedColor) {
+      toast.error('Please select a size and color before adding to cart',
+        { duration: 1000, }
+      );
+      return;
+    }
+    setIsButtonDisabled(true);
 
+    setTimeout(() => {
+      toast.success('Product added to cart!',
+        {
+          duration: 1000,
+        }
+      )
+      setIsButtonDisabled(false);
+    }, 500)
+
+  };
 
 
   return (
@@ -52,7 +102,7 @@ const handleQuantityChange=(action)=>{
                 key={index}
                 src={image.url}
                 alt={image.altText || `Thumbnail ${index}`}
-                className={`w-20 h-20 object-cover rounded-lg cursor-pointer border ${mainImage===image.url ? 'border-black' : 'border-gray-300'}`}
+                className={`w-20 h-20 object-cover rounded-lg cursor-pointer border ${mainImage === image.url ? 'border-black' : 'border-gray-300'}`}
                 onClick={() => setMainImage(image.url)}
               />
             ))}
@@ -74,8 +124,8 @@ const handleQuantityChange=(action)=>{
                 key={index}
                 src={image.url}
                 alt={image.altText || `Thumbnail ${index}`}
-                className={`w-20 h-20 object-cover rounded-lg cursor-pointer border  ${mainImage===image.url ? 'border-black' : 'border-gray-300'}`}
-                onClick={()=>setMainImage(image.url)}
+                className={`w-20 h-20 object-cover rounded-lg cursor-pointer border  ${mainImage === image.url ? 'border-black' : 'border-gray-300'}`}
+                onClick={() => setMainImage(image.url)}
               />
             ))}
           </div>
@@ -101,8 +151,8 @@ const handleQuantityChange=(action)=>{
                 {selectedProduct.colors.map((color) => (
                   <button
                     key={color}
-                    onClick={()=> setSelectedColor(color)}
-                    className={`w-8 h-8 rounded-full border ${selectedColor===color? 'border-4 border-black' : 'border-gray-300'}`}
+                    onClick={() => setSelectedColor(color)}
+                    className={`w-8 h-8 rounded-full border ${selectedColor === color ? 'border-4 border-black' : 'border-gray-300'}`}
                     style={{
                       backgroundColor: color.toLocaleLowerCase(),
                       filter: 'brightness(0.5)',
@@ -120,8 +170,8 @@ const handleQuantityChange=(action)=>{
                 {selectedProduct.sizes.map((size) => (
                   <button
                     key={size}
-                    onClick={()=> setselectedSize(size)}
-                    className={`px-4 py-2 rounded border ${selectedSize===size ? 'bg-black text-white':''}`}
+                    onClick={() => setselectedSize(size)}
+                    className={`px-4 py-2 rounded border ${selectedSize === size ? 'bg-black text-white' : ''}`}
                   >
                     {size}
                   </button>
@@ -131,12 +181,18 @@ const handleQuantityChange=(action)=>{
             <div className='mb-6'>
               <p className='text-gray-700 '> Quantity: </p>
               <div className='flex items-center space-x-4 mt-2'>
-                <button onClick={()=> handleQuantityChange('minus')} className='px-2 py-1 bg-gray-200 rounded text-lg'>-</button>
+                <button onClick={() => handleQuantityChange('minus')} className='px-2 py-1 bg-gray-200 rounded text-lg'>-</button>
                 <span className='text-lg'>{quantity}</span>
-                <button onClick={()=> handleQuantityChange('plus')} className='px-2 py-1 bg-gray-200 rounded text-lg'>+</button>
+                <button onClick={() => handleQuantityChange('plus')} className='px-2 py-1 bg-gray-200 rounded text-lg'>+</button>
               </div>
             </div>
-            <button className='bg-black text-white py-2 px-6 rounded w-full'>ADD TO CART</button>
+            <button
+              onClick={handleAddToCart}
+              disabled={isButtonDisabled}
+              className={`bg-black text-white py-2 px-6 rounded w-full ${isButtonDisabled ? 'cursor-not-allowed opactity-50' : 'hover:bg-gray-900'}`}
+            >
+              {isButtonDisabled ? "Adding..." : 'ADD TO CART'}
+            </button>
             <div className='mt-10 text-gray-700'>
               <h3 className='text-xl font-bold mb-4'>Characteristics:</h3>
               <table className='w-full text-left text-sm text-gray-600'>
@@ -153,6 +209,12 @@ const handleQuantityChange=(action)=>{
               </table>
             </div>
           </div>
+        </div>
+        <div className='mt-20 '>
+          <h2 className='text-2xl text-center font-medium mb-4'>
+            You May Also Like
+          </h2>
+          <ProductGrid products={similarProducts}/>
         </div>
       </div>
     </div>
