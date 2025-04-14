@@ -111,7 +111,7 @@ const ProductDetails = () => {
           <div className='md:w-1/2'>
             <div className='mb-4'>
               <img
-                src={mainImage}
+                src={mainImage || null}
                 alt="Main Product"
                 className='w-full h-auto object-cover rounded-lg'
               />
