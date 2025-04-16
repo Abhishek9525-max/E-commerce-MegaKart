@@ -13,7 +13,7 @@ const CollectionPage = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const handleCliclOutside=()=>{
+  const handleCliclOutside=(e)=>{
     //close sidebar if clicked outside
     if(sidebarRef.current && !sidebarRef.current.contains(e.target)){
       setIsSidebarOpen(false);
@@ -23,8 +23,10 @@ const CollectionPage = () => {
     //add event listner for clicks
     document.addEventListener('mousedown', handleCliclOutside)
     //clean event listner
-    document.removeEventListener('mousedown',handleCliclOutside)
-  })
+    return ()=>{
+      document.removeEventListener('mousedown',handleCliclOutside)
+    };
+  },[])
 
   useEffect(() => {
     setTimeout(() => {
