@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import PayPalButton from "./PayPalButton";
 
 const cart = {
   products: [
@@ -22,7 +23,8 @@ const cart = {
 };
 const Checkout = () => {
   const navigate = useNavigate();
-  const [shippingAddress, setshippingAddress] = useState({
+  const [checkoutId, setCheckoutId] = useState(null);
+  const [shippingAddress, setShippingAddress] = useState({
     firstName: "",
     lastName: "",
     address: "",
@@ -31,12 +33,23 @@ const Checkout = () => {
     country: "",
     phone: "",
   });
+
+  const handleCreateCheckout = (e) => {
+    e.preventDefault();
+    setCheckoutId(123);
+  };
+
+  const handlePaymentSuccess= (details)=>{
+    console.log('payment ',details);
+    navigate('order-confirmation');
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto py-10 px-6 tracking-tighter">
       {/* Left Section */}
       <div className="bg-white rounded-lg p-6">
         <h2 className="text-2xl uppercase mb-6">Checkout</h2>
-        <form>
+        <form onSubmit={handleCreateCheckout}>
           <h3 className="text-lg mb-4">contact Details</h3>
           <div className="mb-4">
             <label className="block text-gray-700 ">Email</label>
@@ -57,7 +70,7 @@ const Checkout = () => {
                 required
                 value={shippingAddress.firstName}
                 onChange={(e) =>
-                  shippingAddress({
+                  setShippingAddress({
                     ...shippingAddress,
                     firstName: e.target.value,
                   })
@@ -73,7 +86,7 @@ const Checkout = () => {
                 required
                 value={shippingAddress.lastName}
                 onChange={(e) =>
-                  shippingAddress({
+                  setShippingAddress({
                     ...shippingAddress,
                     lastName: e.target.value,
                   })
@@ -87,7 +100,10 @@ const Checkout = () => {
               type="text"
               value={shippingAddress.address}
               onChange={(e) =>
-                shippingAddress({ ...shippingAddress, address: e.target.value })
+                setShippingAddress({
+                  ...shippingAddress,
+                  address: e.target.value,
+                })
               }
               className="w-full p-2 border rounded"
               required
@@ -102,7 +118,7 @@ const Checkout = () => {
                 required
                 value={shippingAddress.city}
                 onChange={(e) =>
-                  shippingAddress({
+                  setShippingAddress({
                     ...shippingAddress,
                     city: e.target.value,
                   })
@@ -117,42 +133,65 @@ const Checkout = () => {
                 required
                 value={shippingAddress.postalCode}
                 onChange={(e) =>
-                  shippingAddress({
+                  setShippingAddress({
                     ...shippingAddress,
                     postalCode: e.target.value,
                   })
                 }
               />
-            </div>            
+            </div>
           </div>
           <div className="mb-4">
-              <label className="block text-gray-700">Country</label>
-              <input
-                type="text"
-                value={shippingAddress.country}
-                onChange={(e) =>
-                  shippingAddress({
-                    ...shippingAddress,
-                    country: e.target.value,
-                  })
-                }
-                className="w-full p-2 border rounded"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700">Phone</label>
-              <input
-                type="tel"
-                value={shippingAddress.phone}
-                onChange={(e) =>
-                  shippingAddress({ ...shippingAddress, phone: e.target.value })
-                }
-                className="w-full p-2 border rounded"
-                required
-              />
-            </div>
-          
+            <label className="block text-gray-700">Country</label>
+            <input
+              type="text"
+              value={shippingAddress.country}
+              onChange={(e) =>
+                setShippingAddress({
+                  ...shippingAddress,
+                  country: e.target.value,
+                })
+              }
+              className="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700">Phone</label>
+            <input
+              type="tel"
+              value={shippingAddress.phone}
+              onChange={(e) =>
+                setShippingAddress({
+                  ...shippingAddress,
+                  phone: e.target.value,
+                })
+              }
+              className="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          <div className="mt-6">
+            {!checkoutId ? (
+              <button
+                type="submit"
+                className="w-full bg-black text-white text-wrap py-3 rounded"
+              >
+                {" "}
+                Continue to Payment
+              </button>
+            ) : (
+              <div>
+                <h3 className="text-lg mb-4">Pay with PayPal</h3>
+                {/* PayPal component  */}
+                <PayPalButton
+                  amount={100}
+                  onSuccess={handlePaymentSuccess}
+                  onError={(err) => alert("Payment failed. Try again.")}
+                />
+              </div>
+            )}
+          </div>
         </form>
       </div>
     </div>
