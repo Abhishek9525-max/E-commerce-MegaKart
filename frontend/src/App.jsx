@@ -14,6 +14,7 @@ import OrderDetailsPage from "./pages/OrderDetailsPage";
 import MyOrdersPage from "./pages/MyOrdersPage";
 import AdminLayout from "./components/Admin/AdminLayout";
 import AdminHomePage from "./pages/AdminHomePage";
+import UserManagement from "./components/Admin/UserManagement";
 function App() {
   return (
     <BrowserRouter>
@@ -36,9 +37,10 @@ function App() {
           <Route path="my-orders" element={<MyOrdersPage />} />
         </Route>
         {/* Admin Layout  */}
-        
+
         <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<AdminHomePage />} />
+          <Route index element={<AdminHomePage />} />{" "}
+          <Route path="users" element={<UserManagement />} />
         </Route>
       </Routes>
     </BrowserRouter>
