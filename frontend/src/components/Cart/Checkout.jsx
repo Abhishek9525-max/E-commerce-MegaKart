@@ -41,7 +41,7 @@ const Checkout = () => {
 
   const handlePaymentSuccess = (details) => {
     console.log("payment ", details);
-    navigate("order-confirmation");
+    navigate("/order-confirmation");
   };
 
   return (
