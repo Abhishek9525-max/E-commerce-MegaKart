@@ -242,6 +242,24 @@ router.get("/", async (req, res) => {
   }
 });
 
+// @route GET /api/products/best-seller
+// @desc Retrieve the product with highest rating
+// @access Public
+
+router.get("/best-seller", async (req, res) => {
+  try {
+    const bestSeller = await Product.findOne().sort({rating: -1});
+    if(bestSeller){
+      res.json(bestSeller);
+    }else{
+      res.status(404).json({message: "No best seller found"})
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server error");
+  }
+});
+
 // @route GET /api/products/:id
 // @desc Get a single product by Id
 // @access Public
@@ -276,10 +294,10 @@ router.get("/similar/:id", async (req, res) => {
       category: product.category,
     }).limit(4);
 
-    res.json(similarProducts)
+    res.json(similarProducts);
   } catch (error) {
     console.error(error);
-    res.status(500).send("Server Error")
+    res.status(500).send("Server Error");
   }
 });
 
