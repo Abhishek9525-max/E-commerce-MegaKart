@@ -1,6 +1,7 @@
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import React, { useEffect,useRef,useState } from 'react'
 import { Link } from 'react-router-dom';
+import axios from "axios";
 
 const NewArrivals = () => {
   const scrollRef = useRef(null)
@@ -9,96 +10,22 @@ const NewArrivals = () => {
   const [scrollLeft, setScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
   const [canScrollLeft ,setCanScrollLeft] = useState(false)
-  const newArrivals = [
-    {
-      _id: '1',
-      name: 'stylish jacket',
-      price: 120,
-      images: [
-        {
-          url: 'https://picsum.photos/500/500?random=1',
-          altText: 'Stylish jacket'
-        },
-      ],
-    },
-    {
-      _id: '2',
-      name: 'stylish jacket',
-      price: 120,
-      images: [
-        {
-          url: 'https://picsum.photos/500/500?random=2',
-          altText: 'Stylish jacket'
-        },
-      ],
-    },
-    {
-      _id: '3',
-      name: 'stylish jacket',
-      price: 120,
-      images: [
-        {
-          url: 'https://picsum.photos/500/500?random=3',
-          altText: 'Stylish jacket'
-        },
-      ],
-    },
-    {
-      _id: '4',
-      name: 'stylish jacket',
-      price: 120,
-      images: [
-        {
-          url: 'https://picsum.photos/500/500?random=4',
-          altText: 'Stylish jacket'
-        },
-      ],
-    },
-    {
-      _id: '5',
-      name: 'stylish jacket',
-      price: 120,
-      images: [
-        {
-          url: 'https://picsum.photos/500/500?random=5',
-          altText: 'Stylish jacket'
-        },
-      ],
-    },
-    {
-      _id: '6',
-      name: 'stylish jacket',
-      price: 120,
-      images: [
-        {
-          url: 'https://picsum.photos/500/500?random=6',
-          altText: 'Stylish jacket'
-        },
-      ],
-    },
-    {
-      _id: '7',
-      name: 'stylish jacket',
-      price: 120,
-      images: [
-        {
-          url: 'https://picsum.photos/500/500?random=7',
-          altText: 'Stylish jacket'
-        },
-      ],
-    },
-    {
-      _id: '8',
-      name: 'stylish jacket',
-      price: 120,
-      images: [
-        {
-          url: 'https://picsum.photos/500/500?random=8',
-          altText: 'Stylish jacket'
-        },
-      ],
-    },
-  ];
+  
+  const [ newArrivals, setNewArrivals]= useState([]);
+
+  useEffect(()=>{
+    const fetchNewArrivals = async ()=>{
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/api/products/new-arrivals`
+        ); 
+        setNewArrivals(response.data)
+      } catch (error) {
+        console.log(error)
+      }
+    };
+    fetchNewArrivals();
+  },[])
 
   const handleMouseDown = (e)=>{
     setIsDragging(true)
@@ -152,7 +79,7 @@ const NewArrivals = () => {
       updateScrollButtons();
       return ()=> container.removeEventListener('scroll',updateScrollButtons);
     }
-  },[]);
+  },[newArrivals]);
 
   return (
     <section className='py-16 px-4 lg:px-0'>
