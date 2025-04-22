@@ -485,7 +485,7 @@ const products = [
     name: "Formal Dress Pants",
     description:
       "Classic formal dress pants with a slim fit. Made from lightweight, wrinkle-resistant fabric for a polished look at the office or formal events.",
-    price: 70,
+    price: 2,
     discountPrice: 60,
     countInStock: 20,
     sku: "BW-010",
@@ -509,7 +509,7 @@ const products = [
     name: "High-Waist Skinny Jeans",
     description:
       "High-waist skinny jeans in stretch denim with a button and zip fly. Features a flattering fit that hugs your curves and enhances your silhouette.",
-    price: 50,
+    price: 90,
     discountPrice: 45,
     countInStock: 30,
     sku: "BW-W-001",
