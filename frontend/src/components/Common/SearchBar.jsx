@@ -1,9 +1,15 @@
 import React, { useState } from 'react'
 import { HiMagnifyingGlass, HiMiniXMark } from 'react-icons/hi2';
+import { useDispatch } from "react-redux";
+import { useNavigate } from 'react-router-dom';
+import { fetchProductsByFilters, setFilters } from '../../redux/slices/productSlice';
+
 
 const SearchBar = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleSearchToggle = () => {
     setIsOpen(!isOpen);
@@ -11,7 +17,10 @@ const SearchBar = () => {
 
   const handleSearch =(e)=>{
     e.preventDefault();
-    console.log('Search Term:', searchTerm)
+    // console.log('Search Term:', searchTerm)
+    dispatch(setFilters({ search: searchTerm}))
+    dispatch(fetchProductsByFilters({ search: searchTerm}))
+    navigate(`/collection/all?search=${searchTerm}`)
     setIsOpen(false)
   }
 

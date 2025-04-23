@@ -63,13 +63,13 @@ export const addToCart = createAsyncThunk(
 export const updateCartItemQuantity = createAsyncThunk(
   "cart/updateCartItemQuantity",
   async (
-    { productId, quantity, size, color, guestId, userId },
+    { productId, quantity,guestId, userId ,size, color },
     { rejectWithValue }
   ) => {
     try {
       const response = await axios.put(
         `${import.meta.env.VITE_BACKEND_URL}/api/cart`,
-        { productId, quantity, size, color, guestId, userId }
+        { productId, quantity,guestId, userId ,size, color  }
       );
       return response.data;
     } catch (error) {
@@ -82,12 +82,12 @@ export const updateCartItemQuantity = createAsyncThunk(
 
 export const removeFromCart = createAsyncThunk(
   "cart/removeFromCart",
-  async ({ productId, size, color, guestId, userId }, { rejectWithValue }) => {
+  async ({productId, guestId, userId, size, color }, { rejectWithValue }) => {
     try {
       const response = await axios({
         method: "DELETE",
         url: `${import.meta.env.VITE_BACKEND_URL}/api/cart`,
-        data: { productId, size, color, guestId, userId },
+        data: {productId, guestId, userId, size, color},
       });
       return response.data
     } catch (error) {
