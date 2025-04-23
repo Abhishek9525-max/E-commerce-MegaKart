@@ -28,7 +28,7 @@ const Navbar = () => {
       <nav className="container mx-auto flex items-center justify-between py-4 px-6">
         {/* left logo */}
         <div>
-          <Link to="/" className="text-2xl font-medium">
+          <Link to="/" className="text-2xl  font-semibold text-indigo-900">
             MegaKart
           </Link>
         </div>
@@ -36,25 +36,25 @@ const Navbar = () => {
         <div className="hidden md:flex space-x-6">
           <Link
             to="/collection/all?gender=Men"
-            className="text-gray-700 hover:text-black text-sm font-medium uppercase"
+            className="text-gray-700 hover:text-black text-sm font-semibold uppercase"
           >
             Men
           </Link>
           <Link
             to="/collection/all?gender=Women"
-            className="text-gray-700 hover:text-black text-sm font-medium uppercase"
+            className="text-gray-700 hover:text-black text-sm font-semibold uppercase"
           >
             Women
           </Link>
           <Link
             to="/collection/all?category=Top Wear"
-            className="text-gray-700 hover:text-black text-sm font-medium uppercase"
+            className="text-gray-700 hover:text-black text-sm font-semibold uppercase"
           >
             Top Wear
           </Link>
           <Link
             to="/collection/all?category=Bottom Wear"
-            className="text-gray-700 hover:text-black text-sm font-medium uppercase"
+            className="text-gray-700 hover:text-black text-sm font-semibold uppercase"
           >
             Bottom Wear
           </Link>
@@ -64,7 +64,7 @@ const Navbar = () => {
           {user && user.role === "admin" && (
             <Link
             to="/admin"
-            className="block bg-black px-2 pt-0.5 rounded text-sm text-white "
+            className="block bg-indigo-900 px-2 pt-0.5 rounded text-sm text-white "
           >
             Admin
           </Link>

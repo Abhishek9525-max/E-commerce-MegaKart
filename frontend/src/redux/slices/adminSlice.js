@@ -94,7 +94,7 @@ const adminSlice = createSlice({
       }
     })
     .addCase(deleteUser.fulfilled,(state,action)=>{
-      state.users = state.users.filter((user)=>user._id !== action.pyaload)
+      state.users = state.users.filter((user)=>user._id !== action.payload)
     })
     .addCase(addUser.pending,(state)=>{
       state.loading = true;

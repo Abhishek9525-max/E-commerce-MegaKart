@@ -13,9 +13,9 @@ const Hero = () => {
       />
       <div className='absolute inset-0 bg-black bg-opacity-5 flex items-center justify-center'>
         <div className='text-center
-         text-white p-6 '>
-          <h1 className='text-4xl md:text-9xl font-bold tracking-tighter uppercase mb-4'>
-            Vacation <br /> Ready
+         text-pink-400 p-6 '>
+          <h1 className='text-4xl md:text-9xl font-bold tracking- uppercase mb-4'>
+            Escape in <br /> Style
             </h1>
             <p className='text-sm tracking-tighter md:text-lg mb-6'>
               Explore our vaction-ready outfits with fast worldwide shipping.

@@ -18,10 +18,10 @@ router.post("/", protect, async (req, res) => {
   if (!checkoutItems || checkoutItems.length === 0) {
     return res.status(400).json({ message: "no items in checkout" }); 
   }
-
   try {
     // Create a new checkout session
     const newCheckout = await Checkout.create({
+      
       user: req.user._id,
       checkoutItems: checkoutItems,
       shippingAddress,
