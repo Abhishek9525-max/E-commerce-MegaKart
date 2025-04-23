@@ -13,24 +13,24 @@ import { clearCart } from "../../redux/slices/cartSlice";
 
 const AdminSidebar = () => {
   const navigate = useNavigate();
- const dispatch = useDispatch();
-
-
+  const dispatch = useDispatch();
 
   const handleLogout = () => {
     dispatch(logout());
-    dispatch(clearCart())
+    dispatch(clearCart());
     navigate("/");
   };
 
   return (
     <div className="p-6">
       <div className="mb-6">
-        <Link to="/admin" className="text-2xl font-medium">
+        <Link to="/" className="text-2xl font-medium">
           MegaKart
         </Link>
       </div>
-      <h2 className="text-xl font-medium mb-6 text-center">Admin Dashboard</h2>
+      <Link to={"/admin"} className="text-xl font-medium mb-6 text-center cursor-pointer ">
+        Admin Dashboard
+      </Link>
 
       <nav className="flex flex-col space-y-2 ">
         <NavLink
