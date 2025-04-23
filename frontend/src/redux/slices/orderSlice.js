@@ -42,7 +42,7 @@ export const fetchOrderDetails = createAsyncThunk("orders/fetchOrderDetails", as
 const orderSlice = createSlice({
   name: "orders",
   initialState: {
-    order: [],
+    orders: [],
     totalOrders: 0 ,
     orderDetails: null,
     loading:false,

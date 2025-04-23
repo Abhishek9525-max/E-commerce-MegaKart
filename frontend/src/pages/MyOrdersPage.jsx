@@ -1,55 +1,28 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { fetchUserOrders } from "../redux/slices/orderSlice";
 
 const MyOrdersPage = () => {
-  const [orders, setOrders] = useState([]);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { orders, loading, error } = useSelector((state) => state.orders);
 
   useEffect(() => {
-    //simulate fetchjing order
-    setTimeout(() => {
-      const mockOrders = [
-        {
-          _id: "1234",
-          createdAt: new Date(),
-          shippingAddresss: { city: "new york", country: "USA" },
-          orderItems: [
-            {
-              name: "product1",
-              image: "https://picsum.photos/500/500?random=1",
-            },
-          ],
-          totalPrice: 100,
-          isPaid: true,
-        },
-        {
-          _id: "2345",
-          createdAt: new Date(),
-          shippingAddresss: { city: "new york", country: "USA" },
-          orderItems: [
-            {
-              name: "product2",
-              image: "https://picsum.photos/500/500?random=2",
-            },
-          ],
-          totalPrice: 100,
-          isPaid: false,
-        },
-      ];
-      setOrders(mockOrders);
-    }, 1000);
-  }, []);
+    dispatch(fetchUserOrders());
+  }, [dispatch]);
 
-const handleRowClick = (orderId)=>{
-  navigate(`/order/${orderId}`)
+  const handleRowClick = (orderId) => {
+    navigate(`/order/${orderId}`);
+  };
 
-}
-
+  if(loading) return <p>Loading...</p>
+  if(error) return <p>Error: {error}</p>
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6">
       <h2 className="text-xl sm:text:2xl font-bold mb-6">My Order</h2>
-      <div className="realtive shadow-md sm:rounded-lg overfloww-hidden ">
+      <div className="realtive shadow-md sm:rounded-lg overflow-hidden ">
         <table className="min-w-full text-left text-gray-500 ">
           <thead className="bg-gray-100 text-xs uppercase text-gray-700">
             <tr>
@@ -67,7 +40,7 @@ const handleRowClick = (orderId)=>{
               orders.map((order) => (
                 <tr
                   key={order._id}
-                  onClick={()=> handleRowClick(order._id)}
+                  onClick={() => handleRowClick(order._id)}
                   className="border-b hover:border-gray-50 cursor-pointer"
                 >
                   <td className="py-2 px-2 sm:py-4 sm:px-4 ">
@@ -85,8 +58,8 @@ const handleRowClick = (orderId)=>{
                     {new Date(order.createdAt).toLocaleTimeString()}
                   </td>
                   <td className="py-2 px-2 sm:py-4 sm:px-4">
-                    {order.shippingAddresss
-                      ? `${order.shippingAddresss.city}, ${order.shippingAddresss.country}`
+                    {order.shippingAddress
+                      ? `${order.shippingAddress.city}, ${order.shippingAddress.country}`
                       : "N/A"}
                   </td>
                   <td className="py-2 px-2 sm:py-4 sm:px-4">
@@ -101,7 +74,7 @@ const handleRowClick = (orderId)=>{
                       ${
                         order.isPaid
                           ? "bg-green-100 text-green-700"
-                          : "bg-red text-red-700"
+                          : "bg-red-100 text-red-700"
                       } px-2 py-2 rounded-full text-xs sm:text-sm font-medium`}
                     >
                       {order.isPaid ? "Paid" : "Pending"}
