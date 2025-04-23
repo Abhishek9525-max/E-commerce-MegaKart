@@ -54,9 +54,11 @@ router.put("/:id", protect, admin, async (req, res) => {
       user.name = req.body.name || user.name;
       user.email = req.body.email || user.email;
       user.role = req.body.role || user.role;
-    }
-    const updatedUser = await user.save();
+
+      const updatedUser = await user.save();
     res.json({ message: "User updated succesfully", user: updatedUser });
+    }
+    
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });

@@ -11,7 +11,7 @@ export const fetchUsers = createAsyncThunk("admin/fetchUsers", async () => {
       },
     }
   );
-  response.data;
+  return response.data;
 });
 
 // Add the create user action
@@ -48,7 +48,7 @@ export const updateUser = createAsyncThunk(
         },
       }
     );
-    response.data;
+    return response.data.user;
   }
 );
 
@@ -78,11 +78,11 @@ const adminSlice = createSlice({
     .addCase(fetchUsers.pending, (state) => {
       state.loading = true;
     })
-    builder.addCase(fetchUsers.fulfilled, (state,action) => {
+    .addCase(fetchUsers.fulfilled, (state,action) => {
       state.loading = false;
       state.users =action.payload
     })
-    builder.addCase(fetchUsers.rejected, (state,action) => {
+    .addCase(fetchUsers.rejected, (state,action) => {
       state.loading = false;
       state.error = action.error.message;
     })
