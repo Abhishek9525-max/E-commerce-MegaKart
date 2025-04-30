@@ -13,8 +13,8 @@ const Hero = () => {
       />
       <div className='absolute inset-0 bg-black bg-opacity-5 flex items-center justify-center'>
         <div className='text-center
-         text-pink-400 p-6 '>
-          <h1 className='text-4xl md:text-9xl font-bold tracking- uppercase mb-4'>
+         text-pink-100 p-6 '>
+          <h1 className='text-4xl md:text-9xl font-bold tracking- uppercase mb-4 text-[#E78B48]' >
             Escape in <br /> Style
             </h1>
             <p className='text-sm tracking-tighter md:text-lg mb-6'>
