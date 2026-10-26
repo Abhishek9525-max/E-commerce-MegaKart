@@ -4,6 +4,47 @@ const { protect, admin } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+const buildProductQuery = (filters, includeCategory = true) => {
+  const {
+    collection,
+    size,
+    color,
+    gender,
+    minPrice,
+    maxPrice,
+    search,
+    category,
+    material,
+    brand,
+  } = filters;
+  const query = {};
+
+  if (collection && collection.toLocaleLowerCase() !== "all") {
+    query.collections = collection;
+  }
+  if (includeCategory && category && category.toLocaleLowerCase() !== "all") {
+    query.category = category;
+  }
+  if (material) query.material = { $in: material.split(",") };
+  if (brand) query.brand = { $in: brand.split(",") };
+  if (size) query.sizes = { $in: size.split(",") };
+  if (color) query.colors = { $in: [color] };
+  if (gender) query.gender = gender;
+  if (minPrice || maxPrice) {
+    query.price = {};
+    if (minPrice) query.price.$gte = Number(minPrice);
+    if (maxPrice) query.price.$lte = Number(maxPrice);
+  }
+  if (search) {
+    query.$or = [
+      { name: { $regex: search, $options: "i" } },
+      { description: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  return query;
+};
+
 // @route POST /api/products
 // @desc Create a new Product
 // @access Private/Admin
@@ -156,60 +197,10 @@ router.delete("/:id", protect, admin, async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const {
-      collection,
-      size,
-      color,
-      gender,
-      minPrice,
-      maxPrice,
       sortBy,
-      search,
-      category,
-      material,
-      brand,
       limit,
     } = req.query;
-    let query = {};
-
-    // Filter logic
-    if (collection && collection.toLocaleLowerCase() !== "all") {
-      query.collections = collection;
-    }
-
-    if (category && category.toLocaleLowerCase() !== "all") {
-      query.category = category;
-    }
-
-    if (material) {
-      query.material = { $in: material.split(",") };
-    }
-
-    if (brand) {
-      query.brand = { $in: brand.split(",") };
-    }
-
-    if (size) {
-      query.sizes = { $in: size.split(",") };
-    }
-
-    if (color) {
-      query.colors = { $in: [color] };
-    }
-    if (gender) {
-      query.gender = gender;
-    }
-    if (minPrice || maxPrice) {
-      query.price = {};
-      if (minPrice) query.price.$gte = Number(minPrice);
-      if (maxPrice) query.price.$lte = Number(maxPrice);
-    }
-
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-      ];
-    }
+    const query = buildProductQuery(req.query);
 
     // Sort Logic
     let sort = {};
@@ -236,6 +227,35 @@ router.get("/", async (req, res) => {
       .sort(sort)
       .limit(Number(limit) || 0);
     res.json(products);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server Error");
+  }
+});
+
+// @route GET /api/products/category-counts
+// @desc Get filtered product totals grouped by category
+// @access Public
+router.get("/category-counts", async (req, res) => {
+  try {
+    const [result] = await Product.aggregate([
+      { $match: buildProductQuery(req.query, false) },
+      {
+        $facet: {
+          categories: [
+            { $group: { _id: "$category", count: { $sum: 1 } } },
+          ],
+          total: [{ $count: "count" }],
+        },
+      },
+    ]);
+
+    res.json({
+      total: result.total[0]?.count || 0,
+      categories: Object.fromEntries(
+        result.categories.map(({ _id, count }) => [_id, count])
+      ),
+    });
   } catch (error) {
     console.error(error);
     res.status(500).send("Server Error");

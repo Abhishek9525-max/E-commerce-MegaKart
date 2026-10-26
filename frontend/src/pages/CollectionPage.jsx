@@ -59,7 +59,7 @@ const CollectionPage = () => {
       {/* Filter Sidebar  */}
       <div ref={sidebarRef}
       className={`${isSidebarOpen  ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 z-50 left-0 w-64 border-r border-gray-200 bg-[#F5F2ED] overflow-y-auto transition-transform duration-300 lg:static lg:translate-x-0`}>
-        <FilterSidebar/>
+        <FilterSidebar collection={collection} />
       </div>
       <div className='flex-grow p-4 sm:p-8'>
         <div className='mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
