@@ -82,12 +82,13 @@ const NewArrivals = () => {
   },[newArrivals]);
 
   return (
-    <section id="new-arrivals" className='py-16 px-4 lg:px-0'>
-      <div className='container mx-auto text-center mb-10 relative'>
-        <h2 className='text-3xl font-bold mb-4'>
+    <section id="new-arrivals" className='px-4 py-16 lg:px-0 lg:py-20'>
+      <div className='container relative mx-auto mb-10 text-center'>
+        <p className='luxury-eyebrow mb-2 text-[#77746D]'>Fresh from the atelier</p>
+        <h2 className='mb-4 text-4xl sm:text-5xl'>
           Explore New Arrivals
         </h2>
-        <p>Discover the latest styles straight off the runway, freshly added to keep your wardrobe on the cutting edge of fashion</p>
+        <p className='mx-auto max-w-2xl text-sm leading-6 text-[#77746D]'>Discover the latest styles, thoughtfully selected to bring a considered touch to your everyday wardrobe.</p>
 
         {/* Scroll Button  */}
         <div className='absolute right-0 bottom-[-30px] flex space-x-2'>
@@ -116,14 +117,14 @@ const NewArrivals = () => {
       onMouseLeave={handleMouseUpOrLeave}
       >
         {newArrivals.map((product) => (
-          <div key={product._id} className='min-w-[100%] sm:min-w-[50%] lg:min-w-[30%] relative'>
+          <div key={product._id} className='relative min-w-[100%] overflow-hidden sm:min-w-[50%] lg:min-w-[30%]'>
             <img 
             src={product.images[0]?.url}
               alt={product.images[0]?.altText || product.name}
-              className='w-full h-[500px] object-cover rounded-lg'
+              className='h-[420px] w-full object-cover transition-transform duration-500 hover:scale-[1.02] sm:h-[500px]'
               draggable= 'false'
             />
-            <div className='absolute bottom-0 left-0 right-0 bg-opacity-50 backdrop-blur-md text-white p-4 rounded-b-lg'>
+            <div className='absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#171714]/85 via-[#171714]/55 to-transparent p-5 pt-16 text-white'>
               <Link to={`/product/${product._id}`} className='block'>
               <h4 className='font-medium'>{product.name}</h4>
               <p className='mt-1'>${product.price}</p>

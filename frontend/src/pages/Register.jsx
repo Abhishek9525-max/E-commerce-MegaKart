@@ -39,15 +39,15 @@ const Register = () => {
   };
 
   return (
-    <div className="flex">
-      <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 md:p-12">
-        <form className="w-full max-w-md bg-white p-8 rounded-lg border shadow-lg">
+    <div className="flex min-h-[calc(100vh-120px)]">
+      <div className="flex w-full flex-col items-center justify-center p-6 sm:p-8 md:w-1/2 md:p-12">
+        <form className="w-full max-w-md border border-gray-200 bg-white p-8 sm:p-10">
           <div className="flex justify-center mb-6">
-            <h2 className="text-xl font-medium">MegaKart</h2>
+            <h2 className="font-display text-3xl uppercase tracking-wide">MegaKart</h2>
           </div>
-          <h2 className="text-2xl font-bold text-center mb-6">Hey there! 👋🏻</h2>
-          <p className="text-center mb-6">
-            Enter your username and password to Login
+          <h2 className="mb-3 text-center text-4xl">Create an account</h2>
+          <p className="mb-7 text-center text-sm text-gray-600">
+            Join MegaKart for a more considered shopping experience
           </p>
           <div className="mb-4">
             <label className="block text-sm font-semibold mb-2">Name</label>
@@ -55,7 +55,7 @@ const Register = () => {
               type="email"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="w-full border border-gray-300 bg-[#F5F2ED] p-3 text-sm"
               placeholder="Enter you Name"
             />
           </div>
@@ -65,7 +65,7 @@ const Register = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="w-full border border-gray-300 bg-[#F5F2ED] p-3 text-sm"
               placeholder="Enter you email address"
             />
           </div>
@@ -75,14 +75,14 @@ const Register = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="w-full border border-gray-300 bg-[#F5F2ED] p-3 text-sm"
               placeholder="Enter your password"
             />
           </div>
           <button
             onClick={handleSubmit}
             type="submit"
-            className="w-full bg-black text-white p-2 rounded-lg font-semibold hover:bg-gray-800 transition"
+            className="w-full bg-[#414B36] p-3 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#30392A]"
           >
             {loading ? "loading..." : "Sign Up"}
           </button>
@@ -90,7 +90,7 @@ const Register = () => {
             Don't have an account?{" "}
             <Link
               to={`/login?redirect=${encodeURIComponent(redirect)}`}
-              className="text-blue-500"
+              className="font-medium text-[#414B36] underline underline-offset-4"
             >
               Login
             </Link>

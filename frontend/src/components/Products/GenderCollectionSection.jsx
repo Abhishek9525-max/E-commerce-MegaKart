@@ -5,40 +5,40 @@ import womensCollectionImgae from '../../assets/womens-collection.webp'
 
 const GenderCollectionSection = () => {
   return (
-    <section className='py-16 px-4 lg:px-0'>
-      <div className='container mx-auto flex flex-col md:flex-row gap-8'>
+    <section className='px-4 py-16 lg:px-0 lg:py-20'>
+      <div className='container mx-auto flex flex-col gap-5 md:flex-row md:gap-7'>
         {/* womens collection  */}
-        <div className='relative flex-1'>
+        <div className='group relative flex-1 overflow-hidden'>
           <img src={womensCollectionImgae}
             alt="Women's collection"
-            className='w-full h-[700px] object-cover'
+            className='h-[520px] w-full object-cover transition-transform duration-700 group-hover:scale-[1.02] md:h-[620px]'
           />
-          <div className='absolute bottom-8 left-8 bg-white bg-opacity-90 p-4'>
-            <h2 className='text-2xl font-bold text-gray-900 mb-3'>
+          <div className='absolute bottom-6 left-6 min-w-52 bg-[#F5F2ED]/95 p-5 sm:bottom-8 sm:left-8'>
+            <h2 className='mb-2 text-3xl text-gray-900'>
               Women's Collection
             </h2>
             <Link
               to='/collection/all?gender=Women'
-              className='text-gray-900 underline'>
-              Shop Now
+              className='luxury-eyebrow inline-flex items-center border-b border-[#414B36] pb-1 text-[#414B36]'>
+              Shop Women
             </Link>
           </div>
         </div>
         {/* Men's collection  */}
-        <div className='relative flex-1 '>
+        <div className='group relative flex-1 overflow-hidden'>
           <img
             src={mensCollectionImgae}
             alt="Men's collection"
-            className='w-full h-[700px] object-cover'
+            className='h-[520px] w-full object-cover transition-transform duration-700 group-hover:scale-[1.02] md:h-[620px]'
           />
-          <div className='absolute bottom-8 left-8 bg-white bg-opacity-90 p-4'>
-            <h2 className='text-2xl font-bold text-gray-900 mb-3'>
+          <div className='absolute bottom-6 left-6 min-w-52 bg-[#F5F2ED]/95 p-5 sm:bottom-8 sm:left-8'>
+            <h2 className='mb-2 text-3xl text-gray-900'>
               Men's Collection
             </h2>
             <Link
               to='/collection/all?gender=Men'
-              className='text-gray-900 underline'>
-              Shop Now
+              className='luxury-eyebrow inline-flex items-center border-b border-[#414B36] pb-1 text-[#414B36]'>
+              Shop Men
             </Link>
           </div>
         </div>

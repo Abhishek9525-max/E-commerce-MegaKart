@@ -5,12 +5,13 @@ import featured from '../../assets/featured.webp'
 const FeaturedCollection = () => {
   return (
     <section className='py-16 px-4 lg:px-0'>
-      <div className='container mx-auto flex flex-col-reverse lg:flex-row items-center bg-pink-50 rounded-3xl'>
+      <div className='container mx-auto flex flex-col-reverse items-center overflow-hidden bg-pink-50 lg:flex-row'>
         {/* left content  */}
-        <div className='lg:w-1/2 p-8 text-center lg:text-left'>
-          <h2 className='text-lg font-semibold text-gray-700 mb-2 '>
-          Apparel made for your everyday life          </h2>
-          <h2 className='text-4xl lg:text-5xl font-bold mb-6'>
+        <div className='p-8 text-center sm:p-12 lg:w-1/2 lg:text-left'>
+          <p className='luxury-eyebrow mb-3 text-gray-600'>
+            Apparel made for your everyday life
+          </p>
+          <h2 className='mb-6 text-4xl leading-[1.05] lg:text-6xl'>
           Everyday Confidence, Effortless Comfort
           </h2>
           <p className='text-lg text-gray-600 mb-6 '>
@@ -18,8 +19,8 @@ const FeaturedCollection = () => {
 
           </p>
           <Link to='/collection/all'
-          className='bg-black text-white px-6 py-3 rounded-lg text-lg hover:bg-gray-800'>
-            Shop Now
+          className='luxury-button'>
+            Explore the Collection
           </Link>
         </div>
         {/* Right Content  */}

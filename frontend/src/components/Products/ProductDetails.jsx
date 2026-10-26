@@ -78,7 +78,7 @@ const ProductDetails = ({ productId }) => {
   return (
     <div className="p-6">
       {selectedProduct && (
-        <div className="max-w-6xl mx-auto bg-white p-8 rounded-lg">
+        <div className="mx-auto max-w-6xl border border-gray-200 bg-white p-5 sm:p-8">
           <div className="flex flex-col md:flex-row">
             {/* left thumbnail */}
             <div className="hidden md:flex flex-col space-y-4 mr-6">
@@ -87,8 +87,8 @@ const ProductDetails = ({ productId }) => {
                   key={index}
                   src={image.url}
                   alt={image.altText || `Thumbnail ${index}`}
-                  className={`w-20 h-20 object-cover rounded-lg cursor-pointer border ${
-                    mainImage === image.url ? "border-black" : "border-gray-300"
+                  className={`h-20 w-20 cursor-pointer border object-cover ${
+                    mainImage === image.url ? "border-[#414B36]" : "border-gray-300"
                   }`}
                   onClick={() => setMainImage(image.url)}
                 />
@@ -100,7 +100,7 @@ const ProductDetails = ({ productId }) => {
                 <img
                   src={mainImage || null}
                   alt="Main Product"
-                  className="w-full h-auto object-cover rounded-lg"
+                  className="h-auto w-full object-cover"
                 />
               </div>
             </div>
@@ -120,14 +120,14 @@ const ProductDetails = ({ productId }) => {
             </div>
             {/* Right Side  */}
             <div className="md:w-1/2 md:ml-10">
-              <h1 className="text-2xl md:text-3xl font-semibold mb-2">
+              <h1               className="mb-2 text-3xl font-semibold md:text-4xl">
                 {selectedProduct.name}
               </h1>
               <p className="text-lg text-gray-600 mb-1 line-through">
                 {selectedProduct.originalPrice &&
                   `${selectedProduct.originalPrice}`}
               </p>
-              <p className="text-xl text-gray-500 mb-2">
+              <p className="mb-2 text-2xl font-medium text-gray-700">
                 ${selectedProduct.price}
               </p>
               <p className="text-gray-600 mb-4">
@@ -142,7 +142,7 @@ const ProductDetails = ({ productId }) => {
                       onClick={() => setSelectedColor(color)}
                       className={`w-8 h-8 rounded-full border ${
                         selectedColor === color
-                          ? "border-4 border-black"
+                          ? "border-4 border-[#414B36]"
                           : "border-gray-300"
                       }`}
                       style={{
@@ -160,8 +160,8 @@ const ProductDetails = ({ productId }) => {
                     <button
                       key={size}
                       onClick={() => setselectedSize(size)}
-                      className={`px-4 py-2 rounded border ${
-                        selectedSize === size ? "bg-black text-white" : ""
+                      className={`border border-gray-300 px-4 py-2 text-sm transition-colors ${
+                        selectedSize === size ? "bg-[#414B36] text-white" : "hover:border-[#414B36]"
                       }`}
                     >
                       {size}
@@ -174,14 +174,14 @@ const ProductDetails = ({ productId }) => {
                 <div className="flex items-center space-x-4 mt-2">
                   <button
                     onClick={() => handleQuantityChange("minus")}
-                    className="px-2 py-1 bg-gray-200 rounded text-lg"
+                    className="bg-gray-100 px-3 py-1 text-lg"
                   >
                     -
                   </button>
                   <span className="text-lg">{quantity}</span>
                   <button
                     onClick={() => handleQuantityChange("plus")}
-                    className="px-2 py-1 bg-gray-200 rounded text-lg"
+                    className="bg-gray-100 px-3 py-1 text-lg"
                   >
                     +
                   </button>
@@ -190,10 +190,10 @@ const ProductDetails = ({ productId }) => {
               <button
                 onClick={handleAddToCart}
                 disabled={isButtonDisabled}
-                className={`bg-black text-white py-2 px-6 rounded w-full ${
+                className={`w-full bg-[#414B36] px-6 py-3 text-sm font-semibold tracking-wider text-white transition-colors ${
                   isButtonDisabled
-                    ? "cursor-not-allowed opactity-50"
-                    : "hover:bg-gray-900"
+                    ? "cursor-not-allowed opacity-50"
+                    : "hover:bg-[#30392A]"
                 }`}
               >
                 {isButtonDisabled ? "Adding..." : "ADD TO CART"}

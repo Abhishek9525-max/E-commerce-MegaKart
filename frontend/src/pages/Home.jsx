@@ -43,18 +43,25 @@ const Home = () => {
       <GenderCollectionSection />
       <NewArrivals />
 
-      {/* Best Seller  */}
-      <h2 className="text-3xl text-center font-bold mb-4">Best Seller</h2>
-      {bestSellerProduct ? (
-        <ProductDetails productId={bestSellerProduct._id} />
-      ) : (
-        <p className="text-center">Loading best seller product...</p>
-      )}
+      <section id="best-seller" className="scroll-mt-32 py-12">
+        <div className="mx-auto mb-8 max-w-3xl px-4 text-center">
+          <p className="luxury-eyebrow mb-2 text-[#77746D]">The considered edit</p>
+          <h2 className="text-4xl sm:text-5xl">Best Seller</h2>
+        </div>
+        {bestSellerProduct ? (
+          <ProductDetails productId={bestSellerProduct._id} />
+        ) : (
+          <p className="text-center text-sm text-[#77746D]">
+            Loading best seller product...
+          </p>
+        )}
+      </section>
 
-      <div className="container mx-auto">
-        <h2 className="text-3xl  text-center font-bold mb-4">
-          Top Wear for Women
-        </h2>
+      <div className="container mx-auto px-4 py-12">
+        <div className="mb-8 text-center">
+          <p className="luxury-eyebrow mb-2 text-[#77746D]">Made for every day</p>
+          <h2 className="text-4xl sm:text-5xl">Top Wear for Women</h2>
+        </div>
         <ProductGrid products={products} loading={loading} error={error} />
       </div>
       <FeaturedCollection />

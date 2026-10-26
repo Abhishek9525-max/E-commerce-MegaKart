@@ -12,14 +12,15 @@ const CollectionPage = () => {
   const [searchParams] = useSearchParams()
   const dispatch = useDispatch();
   const {products, loading, error} = useSelector((state)=> state.products);
-  const queryParams = Object.fromEntries([...searchParams]);
+  const searchParamsKey = searchParams.toString();
 
   const sidebarRef= useRef(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   
   useEffect(()=>{
+    const queryParams = Object.fromEntries(new URLSearchParams(searchParamsKey));
     dispatch(fetchProductsByFilters({collection,...queryParams}));
-  },[dispatch, collection, searchParams]);
+  },[dispatch, collection, searchParamsKey]);
 
   const toggleSidebar =()=>{
     setIsSidebarOpen(!isSidebarOpen);
@@ -42,21 +43,23 @@ const CollectionPage = () => {
 
   
   return (
+    <section className='min-h-screen bg-[#F5F2ED]'>
     <div className='flex flex-col lg:flex-row'>
       {/* Mobile Filter Button  */}
       <button 
       onClick={toggleSidebar}
-      className='lg:hidden border p-2 flex justify-center items-center'>
+      className='flex items-center justify-center border-b border-gray-200 bg-[#F0EDE7] p-3 text-xs font-semibold uppercase tracking-widest lg:hidden'>
         <FaFilter className='mr-2 '/>
       </button>
 
       {/* Filter Sidebar  */}
       <div ref={sidebarRef}
-      className={`${isSidebarOpen  ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 z-50 left-0 w-64 bg-white overflow-y-auto transition-transform duration-300 lg:static lg:translate-x-0`}      > 
+      className={`${isSidebarOpen  ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 z-50 left-0 w-64 border-r border-gray-200 bg-[#F5F2ED] overflow-y-auto transition-transform duration-300 lg:static lg:translate-x-0`}>
         <FilterSidebar/>
       </div>
-      <div className='flex-grow p-4 '>
-        <h2 className='text-2xl uppercase mb-4 '>ALL COLECTION</h2>
+      <div className='flex-grow p-4 sm:p-8'>
+        <p className='luxury-eyebrow mb-2 text-gray-500'>The MegaKart edit</p>
+        <h1 className='mb-5 text-4xl uppercase sm:text-5xl'>All Collection</h1>
 
         {/* Sort Option  */}
         <SortOptions/>
@@ -65,6 +68,7 @@ const CollectionPage = () => {
         <ProductGrid products={products} loading={loading} error={error}/>
       </div>
     </div>
+    </section>
   )
 }
 
