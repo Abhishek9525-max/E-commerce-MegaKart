@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   HiOutlineUser,
   HiOutlineShoppingBag,
@@ -23,8 +23,20 @@ const Navbar = () => {
   const [navDrawerOpen, setNavDrawerOpen] = useState(false);
   const { cart } = useSelector((state) => state.cart);
   const { user } = useSelector((state) => state.auth);
+  const { pathname, search } = useLocation();
   const cartItemCount =
     cart?.products?.reduce((total, product) => total + product.quantity, 0) || 0;
+  const gender = new URLSearchParams(search).get("gender")?.toLowerCase();
+  const isCollectionRoute = pathname.startsWith("/collection/");
+
+  const isNavigationItemActive = (label) => {
+    if (label === "Home") return pathname === "/";
+    if (label === "Men") return isCollectionRoute && gender === "men";
+    if (label === "Women") return isCollectionRoute && gender === "women";
+    if (label === "Collections") return isCollectionRoute && !gender;
+    if (label === "New Arrivals") return pathname === "/new-arrivals";
+    return false;
+  };
 
   const closeNavDrawer = () => setNavDrawerOpen(false);
 
@@ -43,19 +55,18 @@ const Navbar = () => {
 
           <div className="hidden items-center gap-7 lg:flex">
             {navigationItems.map(({ label, to }) => (
-              <NavLink
+              <Link
                 key={label}
                 to={to}
-                className={({ isActive }) =>
-                  `border-b pb-2 pt-2 text-[12px] font-medium uppercase tracking-[0.06em] transition-colors ${
-                    isActive
-                      ? "border-[#414B36] text-[#171714]"
-                      : "border-transparent text-[#33342E] hover:border-[#414B36] hover:text-[#171714]"
-                  }`
-                }
+                aria-current={isNavigationItemActive(label) ? "page" : undefined}
+                className={`border-b pb-2 pt-2 text-[12px] font-medium uppercase tracking-[0.06em] transition-colors ${
+                  isNavigationItemActive(label)
+                    ? "border-[#414B36] text-[#171714]"
+                    : "border-transparent text-[#33342E] hover:border-[#414B36] hover:text-[#171714]"
+                }`}
               >
                 {label}
-              </NavLink>
+              </Link>
             ))}
           </div>
 

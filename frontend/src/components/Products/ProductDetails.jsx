@@ -95,20 +95,7 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
   const images = selectedProduct.images || [];
   const sizes = selectedProduct.sizes || [];
   const colors = selectedProduct.colors || [];
-  const discounted =
-    Number.isFinite(selectedProduct.discountPrice) &&
-    selectedProduct.discountPrice > 0 &&
-    selectedProduct.discountPrice < selectedProduct.price;
-  const currentPrice = discounted
-    ? selectedProduct.discountPrice
-    : selectedProduct.price;
-  const discountPercent = discounted
-    ? Math.round(
-        ((selectedProduct.price - selectedProduct.discountPrice) /
-          selectedProduct.price) *
-          100
-      )
-    : 0;
+  const currentPrice = selectedProduct.price;
   const productFacts = [
     { label: "Brand", value: selectedProduct.brand },
     { label: "Material", value: selectedProduct.material },
@@ -117,7 +104,7 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
 
   return (
     <div className="px-4 pb-8 sm:px-6">
-      <article className="mx-auto max-w-7xl border border-[#D8D2C8] bg-white shadow-sm">
+      <article className="mx-auto max-w-7xl overflow-hidden rounded-xl border border-[#EAE6DF] bg-white/90 shadow-sm">
         <div className="grid gap-8 p-5 sm:p-8 lg:grid-cols-2 lg:gap-12 lg:p-12">
           <div className="flex min-w-0 flex-col-reverse gap-4 sm:flex-row">
             {images.length > 1 && (
@@ -152,11 +139,6 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
                   alt={images.find((image) => image.url === mainImage)?.altText || selectedProduct.name}
                   className="absolute inset-0 h-full w-full object-cover"
                 />
-              )}
-              {discounted && (
-                <span className="absolute left-3 top-3 bg-[#A94F38] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
-                  {discountPercent}% off
-                </span>
               )}
               {images.length > 1 && (
                 <div className="absolute bottom-3 right-3 flex gap-2 sm:hidden">
@@ -209,19 +191,6 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
               <span className="text-xl font-semibold text-[#171714]">
                 ${Number(currentPrice).toFixed(2)}
               </span>
-              {discounted && (
-                <>
-                  <span className="text-sm text-[#77746D] line-through">
-                    ${Number(selectedProduct.price).toFixed(2)}
-                  </span>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[#A94F38]">
-                    Save $
-                    {(
-                      selectedProduct.price - selectedProduct.discountPrice
-                    ).toFixed(2)}
-                  </span>
-                </>
-              )}
             </div>
 
             {selectedProduct.description && (
@@ -243,14 +212,14 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
                       onClick={() => setSelectedColor(color)}
                       aria-label={`Select ${color}`}
                       aria-pressed={selectedColor === color}
-                      className={`h-8 w-8 rounded-full border bg-white p-0.5 ${
+                      className={`h-8 w-8 rounded-xl border bg-white p-0.5 ${
                         selectedColor === color
                           ? "border-[#414B36]"
                           : "border-[#D8D2C8]"
                       }`}
                     >
                       <span
-                        className="block h-full w-full rounded-full border border-black/10"
+                        className="block h-full w-full rounded-lg border border-black/10"
                         style={{ backgroundColor: color.toLowerCase() }}
                       />
                     </button>
@@ -271,7 +240,7 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
                       type="button"
                       onClick={() => setSelectedSize(size)}
                       aria-pressed={selectedSize === size}
-                      className={`min-w-12 border px-4 py-2 text-xs font-medium transition-colors ${
+                      className={`min-w-12 rounded-sm border px-4 py-2 text-xs font-medium transition-colors ${
                         selectedSize === size
                           ? "border-[#414B36] bg-[#414B36] text-white"
                           : "border-[#D8D2C8] text-[#171714] hover:border-[#414B36]"
@@ -299,7 +268,7 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
             )}
 
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              <div className="flex h-11 w-fit items-center border border-[#D8D2C8]">
+              <div className="flex h-11 w-fit items-center overflow-hidden rounded-sm border border-[#D8D2C8]">
                 <button
                   type="button"
                   onClick={() => handleQuantityChange(-1)}
@@ -324,7 +293,7 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
                 disabled={
                   isButtonDisabled || selectedProduct.countInStock === 0
                 }
-                className="luxury-button min-h-11 flex-1 disabled:cursor-not-allowed disabled:opacity-50"
+                className="luxury-button min-h-11 flex-1 rounded-sm disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <HiOutlineShoppingBag className="h-4 w-4" />
                 {isButtonDisabled
@@ -334,7 +303,7 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
             </div>
 
             {productFacts.length > 0 && (
-              <dl className="mt-6 grid grid-cols-1 gap-x-5 gap-y-4 bg-[#F5F2ED] p-4 sm:grid-cols-2">
+              <dl className="mt-6 grid grid-cols-1 gap-x-5 gap-y-4 rounded-sm bg-[#F5F2ED] p-4 sm:grid-cols-2">
                 {productFacts.map(({ label, value }) => (
                   <div key={label}>
                     <dt className="luxury-eyebrow text-[8px] text-[#77746D]">

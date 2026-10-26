@@ -40,20 +40,16 @@ const Home = () => {
   return (
     <div>
       <Hero />
-      <FeaturesSection />
       <GenderCollectionSection />
       <NewArrivals />
 
       <section id="best-seller" className="scroll-mt-32 py-12">
         <div className="mx-auto mb-8 max-w-3xl px-4 text-center">
-          <p className="luxury-eyebrow mb-2 text-[#77746D]">The considered edit</p>
+          <p className="luxury-eyebrow mb-2 text-[#A94F38]">The considered edit</p>
           <h2 className="text-4xl sm:text-5xl">Best Seller</h2>
         </div>
         {bestSellerProduct ? (
-          <ProductDetails
-            productId={bestSellerProduct._id}
-            showSimilarProducts={false}
-          />
+          <ProductDetails productId={bestSellerProduct._id} />
         ) : (
           <p className="text-center text-sm text-[#77746D]">
             Loading best seller product...
@@ -69,6 +65,7 @@ const Home = () => {
         <ProductGrid products={products} loading={loading} error={error} />
       </div>
       <FeaturedCollection />
+      <FeaturesSection />
     </div>
   );
 };
