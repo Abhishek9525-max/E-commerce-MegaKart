@@ -7,16 +7,23 @@ const SortOptions = () => {
 
   const handelSortChange = (e) => {
     const sortBy = e.target.value;
-    searchParams.set('sortBy', sortBy)
-    setSearchParams(searchParams);
+    const nextParams = new URLSearchParams(searchParams);
+    if (sortBy) {
+      nextParams.set('sortBy', sortBy);
+    } else {
+      nextParams.delete('sortBy');
+    }
+    setSearchParams(nextParams);
   };
 
 
   return (
-    <div className='flex items-center justify-end'>
+    <label htmlFor="sort" className='flex items-center gap-2 rounded-md border border-[#EAE6DF] bg-white px-3 py-2'>
+      <span className='text-[10px] font-medium uppercase tracking-[0.1em] text-[#77746D]'>Sort:</span>
       <select
         id="sort"
-        className='border p-2 rounded-md focus:outline-none'
+        aria-label="Sort products"
+        className='max-w-[190px] cursor-pointer bg-transparent text-xs font-medium text-[#171714] outline-none'
         onChange={handelSortChange}
         value={searchParams.get('sortBy') || ''}>
         <option value="">Default</option>
@@ -24,7 +31,7 @@ const SortOptions = () => {
         <option value="priceDesc">Price: High to Low</option>
         <option value="popularity">Popularity</option>
       </select>
-    </div>
+    </label>
   )
 }
 

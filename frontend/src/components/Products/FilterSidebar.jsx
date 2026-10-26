@@ -11,7 +11,7 @@ const FilterSidebar = ({ collection }) => {
   const [filters, setFilters] = useState({
     category: '',
     gender: '',
-    color: '',
+    color: [],
     size: [],
     material: [],
     brand: [],
@@ -61,7 +61,7 @@ const FilterSidebar = ({ collection }) => {
     setFilters({
       category: params.category || '',
       gender: params.gender || '',
-      color: params.color || '',
+      color: params.color ? params.color.split(',') : [],
       size: params.size ? params.size.split(',') : [],
       material: params.material ? params.material.split(',') : [],
       brand: params.brand ? params.brand.split(',') : [],
@@ -138,7 +138,9 @@ const updateURLParams=(newFilters)=>{
 const handleColorSelect = (color) => {
   const newFilters = {
     ...filters,
-    color: filters.color === color ? '' : color,
+    color: filters.color.includes(color)
+      ? filters.color.filter((selectedColor) => selectedColor !== color)
+      : [...filters.color, color],
   };
   setFilters(newFilters);
   updateURLParams(newFilters);
@@ -173,7 +175,7 @@ const clearAllFilters = () => {
   setFilters({
     category: '',
     gender: gender || '',
-    color: '',
+    color: [],
     size: [],
     material: [],
     brand: [],
@@ -187,7 +189,7 @@ const activeFilterCount = (() => {
   const params = new URLSearchParams(searchParamsKey);
   return (
     Number(params.has('category')) +
-    Number(params.has('color')) +
+    (params.get('color')?.split(',').filter(Boolean).length || 0) +
     (params.get('size')?.split(',').filter(Boolean).length || 0) +
     (params.get('material')?.split(',').filter(Boolean).length || 0) +
     (params.get('brand')?.split(',').filter(Boolean).length || 0) +
@@ -267,11 +269,11 @@ return (
               type='button'
               onClick={() => handleColorSelect(name)}
               aria-label={`Filter by ${name}`}
-              aria-pressed={filters.color === name}
+              aria-pressed={filters.color.includes(name)}
               className='group flex flex-col items-center gap-1.5'
             >
               <span className={`flex h-10 w-10 items-center justify-center rounded-full border bg-white p-[3px] transition ${
-                filters.color === name
+                filters.color.includes(name)
                   ? 'border-[#414B36] ring-1 ring-[#414B36] ring-offset-1'
                   : 'border-[#D8D2C8] group-hover:border-[#77746D]'
               }`}>
@@ -281,7 +283,7 @@ return (
                 />
               </span>
               <span className={`text-xs ${
-                filters.color === name
+                filters.color.includes(name)
                   ? 'font-medium text-[#171714]'
                   : 'text-[#77746D]'
               }`}>

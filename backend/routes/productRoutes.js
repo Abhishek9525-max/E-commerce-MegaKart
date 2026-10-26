@@ -28,7 +28,7 @@ const buildProductQuery = (filters, includeCategory = true) => {
   if (material) query.material = { $in: material.split(",") };
   if (brand) query.brand = { $in: brand.split(",") };
   if (size) query.sizes = { $in: size.split(",") };
-  if (color) query.colors = { $in: [color] };
+  if (color) query.colors = { $in: color.split(",") };
   if (gender) query.gender = gender;
   if (minPrice || maxPrice) {
     query.price = {};
