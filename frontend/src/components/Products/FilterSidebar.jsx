@@ -6,6 +6,9 @@ const FilterSidebar = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate =  useNavigate();
+  const hasGenderFilter = !['men', 'women'].includes(
+    searchParams.get('gender')?.toLowerCase()
+  );
   const [filters, setFilters] = useState({
     category: '',
     gender: '',
@@ -18,7 +21,10 @@ const FilterSidebar = () => {
   })
 
   const [priceRange, setPriceRange] = useState([0, 100])
-  const categories = ['Top Wear', 'Bottom Wear'];
+  const categories = [
+    { value: 'Top Wear', label: 'Shirts & Tops' },
+    { value: 'Bottom Wear', label: 'Trousers & Jeans' },
+  ];
   const colors = [
     'Red',
     'Blue',
@@ -118,46 +124,46 @@ return (
       {/* Category Filter  */}
       <div className='mb-6'>
         <label className='block text-gray-600 font-medium mb-2'>Category </label>
-        {categories.map((category) => (
+        {categories.map(({ value, label }) => (
           <div
-            key={category}
+            key={value}
             className='flex items-center mb-1'
           >
             <input
               type="radio"
               name='category'
-              value={category}
+              value={value}
               onChange={handleFilterChange}
-              checked={filters.category === category}
+              checked={filters.category === value}
               className='mr-2 h-4 w-4 text-blue-500 focus:ring-blue-400 border-gray-300 '
             />
-            <span className='text-gray-700'>{category}</span>
+            <span className='text-gray-700'>{label}</span>
 
           </div>
         ))}
       </div>
 
-      {/* Gender Filter  */}
-      <div className='mb-6'>
-        <label className='block text-gray-600 font-medium mb-2'>Gender </label>
-        {genders.map((gender) => (
-          <div
-            key={gender}
-            className='flex items-center mb-1'
-          >
-            <input
-              type="radio"
-              name='gender'
-              value={gender}
-              onChange={handleFilterChange}
-              checked={filters.gender === gender}
-              className='mr-2 h-4 w-4 text-blue-500 focus:ring-blue-400 border-gray-300 '
-            />
-            <span className='text-gray-700'>{gender}</span>
-
-          </div>
-        ))}
-      </div>
+      {hasGenderFilter && (
+        <div className='mb-6'>
+          <label className='block text-gray-600 font-medium mb-2'>Gender </label>
+          {genders.map((gender) => (
+            <div
+              key={gender}
+              className='flex items-center mb-1'
+            >
+              <input
+                type="radio"
+                name='gender'
+                value={gender}
+                onChange={handleFilterChange}
+                checked={filters.gender === gender}
+                className='mr-2 h-4 w-4 text-blue-500 focus:ring-blue-400 border-gray-300 '
+              />
+              <span className='text-gray-700'>{gender}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Color Filter  */}
       <div className='mb-6'>

@@ -25,8 +25,11 @@ const NewArrivalsPage = () => {
   }, []);
 
   return (
-    <section className="container mx-auto min-h-screen px-4 py-10">
-      <h1 className="mb-4 text-2xl font-semibold uppercase">New Arrivals</h1>
+    <section className="container mx-auto min-h-screen px-4 py-10 sm:py-12">
+      <header className="mb-8">
+        <p className="luxury-eyebrow mb-2 text-gray-500">The MegaKart edit</p>
+        <h1 className="text-4xl uppercase sm:text-5xl">New Arrivals</h1>
+      </header>
       {!loading && !error && products.length === 0 ? (
         <p className="text-gray-600">No new arrivals are available right now.</p>
       ) : (

@@ -13,6 +13,10 @@ const CollectionPage = () => {
   const dispatch = useDispatch();
   const {products, loading, error} = useSelector((state)=> state.products);
   const searchParamsKey = searchParams.toString();
+  const activeGender = new URLSearchParams(searchParamsKey).get('gender');
+  const collectionTitle = activeGender
+    ? `${activeGender} Collection`
+    : 'All Collection';
 
   const sidebarRef= useRef(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -58,11 +62,13 @@ const CollectionPage = () => {
         <FilterSidebar/>
       </div>
       <div className='flex-grow p-4 sm:p-8'>
-        <p className='luxury-eyebrow mb-2 text-gray-500'>The MegaKart edit</p>
-        <h1 className='mb-5 text-4xl uppercase sm:text-5xl'>All Collection</h1>
-
-        {/* Sort Option  */}
-        <SortOptions/>
+        <div className='mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
+          <div>
+            <p className='luxury-eyebrow mb-2 text-gray-500'>The MegaKart edit</p>
+            <h1 className='text-4xl uppercase sm:text-5xl'>{collectionTitle}</h1>
+          </div>
+          <SortOptions/>
+        </div>
 
         {/* Product Grid  */}
         <ProductGrid products={products} loading={loading} error={error}/>

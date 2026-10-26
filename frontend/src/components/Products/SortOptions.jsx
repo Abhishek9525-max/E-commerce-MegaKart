@@ -13,7 +13,7 @@ const SortOptions = () => {
 
 
   return (
-    <div className='mb-4 flex items-center justify-end'>
+    <div className='flex items-center justify-end'>
       <select
         id="sort"
         className='border p-2 rounded-md focus:outline-none'
