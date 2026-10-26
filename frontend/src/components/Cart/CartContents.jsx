@@ -35,21 +35,26 @@ const CartContents = ({ cart, userId, guestId }) => {
       {cart.products.map((product, index) => (
         <div
           key={index}
-          className="flex items-start justify-between py-4 border-b"
+          className="flex items-start justify-between border-b border-[#EAE6DF] py-5"
         >
           <div className="flex items-start">
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-20 h-24 object-cover mr-4 rounded"
-            />
+            <div className="mr-4 h-24 w-20 shrink-0 overflow-hidden rounded bg-[#EAE4D9]">
+              <img
+                src={product.image}
+                alt={product.name}
+                className="h-full w-full object-cover"
+              />
+            </div>
             <div>
-              <h3>{product.name}</h3>
-              <p className="text-sm text-gray-500">
-                size:{product.size} | color: {product.color}
+              <h3 className="font-display text-xl font-semibold text-[#171714]">
+                {product.name}
+              </h3>
+              <p className="font-sans text-xs font-light uppercase tracking-wide text-gray-500">
+                SIZE: {product.size} | COLOR: {product.color}
               </p>
-              <div className="flex items-center mt-2">
+              <div className="mt-3 inline-flex h-9 items-center justify-between gap-1 rounded-md border border-[#D8D2C8] bg-white px-1 shadow-[0_1px_3px_rgba(23,23,20,0.06)]">
                 <button
+                  type="button"
                   onClick={() =>
                     handleAddToCart(
                       product.productId,
@@ -59,12 +64,16 @@ const CartContents = ({ cart, userId, guestId }) => {
                       product.color
                     )
                   }
-                  className="border rounded px-2 py-1 text-xl font-medium"
+                  aria-label={`Decrease quantity of ${product.name}`}
+                  className="flex h-7 w-7 items-center justify-center text-lg text-[#77746D] transition-colors hover:text-[#171714]"
                 >
-                  -
+                  −
                 </button>
-                <span className="mx-4">{product.quantity}</span>
+                <span className="min-w-5 text-center font-sans text-sm font-semibold tabular-nums text-[#171714]">
+                  {product.quantity}
+                </span>
                 <button
+                  type="button"
                   onClick={() =>
                     handleAddToCart(
                       product.productId,
@@ -74,7 +83,8 @@ const CartContents = ({ cart, userId, guestId }) => {
                       product.color
                     )
                   }
-                  className="border rounded px-2 py-1 text-xl font-medium"
+                  aria-label={`Increase quantity of ${product.name}`}
+                  className="flex h-7 w-7 items-center justify-center text-lg text-[#77746D] transition-colors hover:text-[#171714]"
                 >
                   +
                 </button>
@@ -82,8 +92,9 @@ const CartContents = ({ cart, userId, guestId }) => {
             </div>
           </div>
           <div>
-            <p>$ {product.price.toLocaleString()}</p>
+            <p className="font-sans">$ {product.price.toLocaleString()}</p>
             <button
+              type="button"
               onClick={() =>
                 handleRemoveFromCart(
                   product.productId,
@@ -91,8 +102,10 @@ const CartContents = ({ cart, userId, guestId }) => {
                   product.color
                 )
               }
+              className="mt-2 inline-flex items-center gap-1.5 font-sans text-sm text-[#A94F38] underline underline-offset-2 transition-colors hover:text-[#803A2A]"
             >
-              <RiDeleteBin3Line className="h-6 w-6 mt-2 text-red-600" />
+              <RiDeleteBin3Line className="h-4 w-4" />
+              Remove
             </button>
           </div>
         </div>

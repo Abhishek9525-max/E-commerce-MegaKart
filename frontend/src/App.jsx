@@ -23,11 +23,39 @@ import OrderManagement from "./components/Admin/OrderManagement";
 import { Provider } from "react-redux";
 import store from "./redux/store";
 import ProtectedRoute from "./components/Common/ProtectedRoute";
+import { FiAlertTriangle, FiCheck, FiInfo, FiX } from "react-icons/fi";
+
+const notificationIcon = (Icon, backgroundColor) => (
+  <span
+    aria-hidden="true"
+    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
+    style={{ backgroundColor }}
+  >
+    <Icon className="h-3 w-3 text-white" strokeWidth={3} />
+  </span>
+);
+
 function App() {
   return (
     <Provider store={store}>
       <BrowserRouter>
-        <Toaster position="top-right" />
+        <Toaster
+          position="top-right"
+          theme="light"
+          icons={{
+            success: notificationIcon(FiCheck, "#414B36"),
+            error: notificationIcon(FiX, "#A94F38"),
+            warning: notificationIcon(FiAlertTriangle, "#B7792B"),
+            info: notificationIcon(FiInfo, "#414B36"),
+          }}
+          toastOptions={{
+            classNames: {
+              toast: "!border-[#D8D2C8] !bg-[#F5F2ED] !text-[#171714]",
+              title: "!text-[#171714]",
+              description: "!text-[#77746D]",
+            },
+          }}
+        />
         <Routes>
           <Route path="/" element={<UserLayout />}>
             {/* user layout */}
