@@ -40,6 +40,7 @@ const Home = () => {
   return (
     <div>
       <Hero />
+      <FeaturesSection />
       <GenderCollectionSection />
       <NewArrivals />
 
@@ -49,7 +50,10 @@ const Home = () => {
           <h2 className="text-4xl sm:text-5xl">Best Seller</h2>
         </div>
         {bestSellerProduct ? (
-          <ProductDetails productId={bestSellerProduct._id} />
+          <ProductDetails
+            productId={bestSellerProduct._id}
+            showSimilarProducts={false}
+          />
         ) : (
           <p className="text-center text-sm text-[#77746D]">
             Loading best seller product...
@@ -65,7 +69,6 @@ const Home = () => {
         <ProductGrid products={products} loading={loading} error={error} />
       </div>
       <FeaturedCollection />
-      <FeaturesSection />
     </div>
   );
 };
