@@ -33,7 +33,9 @@ export const loginUser = createAsyncThunk(
 
       return response.data.user; // Return the user object from the response
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue({
+        message: error.response?.data?.message || "Unable to sign in. Please try again.",
+      });
     }
   }
 );
@@ -52,7 +54,9 @@ export const registerUser = createAsyncThunk(
 
       return response.data.user; // Return the user object from the response
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue({
+        message: error.response?.data?.message || "Unable to create your account. Please try again.",
+      });
     }
   }
 );
@@ -135,7 +139,7 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload.message;
+        state.error = action.payload?.message || action.error.message;
       })
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
@@ -147,7 +151,7 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload.message;
+        state.error = action.payload?.message || action.error.message;
       })
       .addCase(uploadProfileImage.fulfilled, (state, action) => {
         state.user = action.payload;

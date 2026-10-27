@@ -31,14 +31,31 @@ const profileImageUpload = multer({
 
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
+  const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+
+  if (!name?.trim() || !normalizedEmail || !password) {
+    return res.status(400).json({ message: "Name, email, and password are required." });
+  }
+  if (name.trim().length < 2) {
+    return res.status(400).json({ message: "Please enter a name with at least 2 characters." });
+  }
+  if (password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password)) {
+    return res.status(400).json({
+      message: "Use at least 8 characters, including an uppercase letter, a lowercase letter, and a number.",
+    });
+  }
 
   try {
-    //Registration Logic
-    let user = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: normalizedEmail }).collation({
+      locale: "en",
+      strength: 2,
+    });
 
-    if (user) return res.status(400).json({ message: " User already exits" });
+    if (existingUser) {
+      return res.status(400).json({ message: "An account with this email already exists." });
+    }
 
-    user = new User({ name, email, password });
+    const user = new User({ name: name.trim(), email: normalizedEmail, password });
     await user.save();
 
     //Create JWT Payload
@@ -66,6 +83,9 @@ router.post("/register", async (req, res) => {
       }
     );
   } catch (error) {
+    if (error.code === 11000 && error.keyPattern?.email) {
+      return res.status(400).json({ message: "An account with this email already exists." });
+    }
     console.log(error);
     res.status(500).send("Server Error");
   }
@@ -77,10 +97,11 @@ router.post("/register", async (req, res) => {
 // @access Public
 router.post('/login', async(req,res)=>{
   const {email,password} = req.body;
+  const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
 
   try{
     //find the user by email
-    let user = await User.findOne({ email})
+    let user = await User.findOne({ email: normalizedEmail })
 
     if(!user) return res.status(400).json({message: 'Invalid Credentials'});
     const isMatch = await user.matchPassword(password);
