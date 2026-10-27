@@ -84,10 +84,18 @@ const Navbar = () => {
             )}
             <Link
               to="/profile"
-              aria-label="Your account"
-              className="hidden text-[#171714] transition-colors hover:text-[#77746D] sm:block"
+              aria-label={user ? `Your account, ${user.name}` : "Your account"}
+              className="hidden text-[#171714] transition-opacity hover:opacity-75 sm:block"
             >
-              <HiOutlineUser className="h-[21px] w-[21px]" />
+              {user?.profileImage ? (
+                <img
+                  src={user.profileImage}
+                  alt=""
+                  className="h-8 w-8 rounded-full border border-[#D8D2C8] object-cover"
+                />
+              ) : (
+                <HiOutlineUser className="h-[21px] w-[21px]" />
+              )}
             </Link>
             <button
               type="button"

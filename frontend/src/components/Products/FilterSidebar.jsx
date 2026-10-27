@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import axios from 'axios';
+import { getColorSwatchValue } from '../../utils/colorSwatches';
 
 const FilterSidebar = ({ collection }) => {
 
@@ -25,22 +26,13 @@ const FilterSidebar = ({ collection }) => {
   const [priceRange, setPriceRange] = useState([0, 100])
   const [availableCollections, setAvailableCollections] = useState([]);
   const [collectionsError, setCollectionsError] = useState(false);
+  const [availableColors, setAvailableColors] = useState([]);
+  const [colorsError, setColorsError] = useState(false);
   const selectedGender = new URLSearchParams(searchParamsKey).get('gender');
   const categories = [
     { value: 'Top Wear', label: 'Shirts & Tops' },
     { value: 'Bottom Wear', label: 'Trousers & Jeans' },
   ];
-  const colors = [
-    { name: 'Red', shade: '#DC2626' },
-    { name: 'Blue', shade: '#0753B8' },
-    { name: 'Black', shade: '#171714' },
-    { name: 'Yellow', shade: '#E8B62D' },
-    { name: 'Gray', shade: '#707783' },
-    { name: 'Pink', shade: '#F1C1C8' },
-    { name: 'Beige', shade: '#E8E1D3' },
-    { name: 'Navy', shade: '#203A5D' },
-  ];
-
   const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
   const materials = [
@@ -136,6 +128,32 @@ const FilterSidebar = ({ collection }) => {
     fetchCollections();
     return () => controller.abort();
   }, [selectedGender]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const params = new URLSearchParams();
+    if (selectedGender) params.set('gender', selectedGender);
+    if (collection) params.set('collection', collection);
+
+    const fetchColors = async () => {
+      setColorsError(false);
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/api/products/colors?${params}`,
+          { signal: controller.signal }
+        );
+        setAvailableColors(response.data);
+      } catch (error) {
+        if (!axios.isCancel(error)) {
+          console.error('Failed to load available product colors:', error);
+          setColorsError(true);
+        }
+      }
+    };
+
+    fetchColors();
+    return () => controller.abort();
+  }, [collection, selectedGender]);
 
 
   const handleFilterChange = (e) => {
@@ -300,10 +318,13 @@ return (
       <div className='-mx-5 mb-5 border-b border-[#EAE6DF] px-5 pb-5'>
         <div className='mb-3 flex items-center justify-between'>
           <h4 className='text-sm font-medium uppercase tracking-[0.08em] text-[#171714]'>Atelier Palette</h4>
-          <span className='text-sm text-[#77746D]'>{colors.length} shades</span>
+          <span className='text-sm text-[#77746D]'>{availableColors.length} shades</span>
         </div>
+        {colorsError ? (
+          <p role='alert' className='text-xs text-[#A94F38]'>Unable to load color options.</p>
+        ) : (
         <div className='grid grid-cols-4 gap-x-2 gap-y-3'>
-          {colors.map(({ name, shade }) => (
+          {availableColors.map((name) => (
             <button
               key={name}
               type='button'
@@ -319,7 +340,7 @@ return (
               }`}>
                 <span
                   className='h-full w-full rounded-full border border-black/10'
-                  style={{ backgroundColor: shade }}
+                  style={{ background: getColorSwatchValue(name) }}
                 />
               </span>
               <span className={`text-xs ${
@@ -332,6 +353,7 @@ return (
             </button>
           ))}
         </div>
+        )}
       </div>
 
       {/* Size Filter  */}

@@ -10,6 +10,7 @@ import {
 } from "../../redux/slices/productSlice";
 import { addToCart } from "../../redux/slices/cartSlice";
 import { getProductPricing } from "../../utils/productPricing";
+import { getColorSwatchValue } from "../../utils/colorSwatches";
 
 const ProductDetails = ({ productId, showSimilarProducts = true }) => {
   const { id } = useParams();
@@ -102,6 +103,15 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
     { label: "Brand", value: selectedProduct.brand },
     { label: "Material", value: selectedProduct.material },
     { label: "Category", value: selectedProduct.category },
+    ...(typeof selectedProduct.countInStock === "number"
+      ? [{
+          label: "Availability",
+          value: selectedProduct.countInStock > 0
+            ? `${selectedProduct.countInStock} in stock`
+            : "Out of stock",
+          isUnavailable: selectedProduct.countInStock === 0,
+        }]
+      : []),
   ].filter(({ value }) => value);
 
   return (
@@ -219,9 +229,9 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
             {colors.length > 0 && (
               <fieldset className="mt-6">
                 <legend className="luxury-eyebrow text-[9px] text-[#5C5A54]">
-                  Color{selectedColor ? `: ${selectedColor}` : ""}
+                  {selectedColor ? `Color: ${selectedColor}` : "Color"}
                 </legend>
-                <div className="mt-2.5 flex flex-wrap gap-2">
+                <div className="mt-2.5 flex flex-wrap gap-2.5">
                   {colors.map((color) => (
                     <button
                       key={color}
@@ -229,15 +239,15 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
                       onClick={() => setSelectedColor(color)}
                       aria-label={`Select ${color}`}
                       aria-pressed={selectedColor === color}
-                      className={`h-8 w-8 rounded-xl border bg-white p-0.5 ${
+                      className={`h-9 w-9 rounded-xl border bg-white p-0.5 transition-shadow ${
                         selectedColor === color
-                          ? "border-[#414B36]"
-                          : "border-[#D8D2C8]"
+                          ? "border-[#414B36] ring-1 ring-[#414B36]"
+                          : "border-[#D8D2C8] hover:ring-1 hover:ring-[#D8D2C8]"
                       }`}
                     >
                       <span
                         className="block h-full w-full rounded-lg border border-black/10"
-                        style={{ backgroundColor: color.toLowerCase() }}
+                        style={{ background: getColorSwatchValue(color) }}
                       />
                     </button>
                   ))}
@@ -268,20 +278,6 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
                   ))}
                 </div>
               </fieldset>
-            )}
-
-            {typeof selectedProduct.countInStock === "number" && (
-              <p
-                className={`mt-4 text-xs ${
-                  selectedProduct.countInStock > 0
-                    ? "text-[#77746D]"
-                    : "font-medium text-[#A94F38]"
-                }`}
-              >
-                {selectedProduct.countInStock > 0
-                  ? `${selectedProduct.countInStock} in stock`
-                  : "Out of stock"}
-              </p>
             )}
 
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
@@ -321,12 +317,14 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
 
             {productFacts.length > 0 && (
               <dl className="mt-6 grid grid-cols-1 gap-x-5 gap-y-4 rounded-sm bg-[#F5F2ED] p-4 sm:grid-cols-2">
-                {productFacts.map(({ label, value }) => (
+                {productFacts.map(({ label, value, isUnavailable }) => (
                   <div key={label}>
                     <dt className="luxury-eyebrow text-[8px] text-[#77746D]">
                       {label}
                     </dt>
-                    <dd className="mt-1 text-xs text-[#171714]">{value}</dd>
+                    <dd className={`mt-1 text-xs ${isUnavailable ? "font-medium text-[#A94F38]" : "text-[#171714]"}`}>
+                      {value}
+                    </dd>
                   </div>
                 ))}
               </dl>

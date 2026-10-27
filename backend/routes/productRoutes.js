@@ -260,6 +260,26 @@ router.get("/collections", async (req, res) => {
   }
 });
 
+router.get("/colors", async (req, res) => {
+  try {
+    const query = { isPublished: { $ne: false } };
+    if (req.query.gender) query.gender = req.query.gender;
+    if (req.query.collection && req.query.collection.toLowerCase() !== "all") {
+      query.collections = req.query.collection;
+    }
+
+    const colors = await Product.distinct("colors", query);
+    res.json(
+      colors
+        .filter((color) => typeof color === "string" && color.trim())
+        .sort((left, right) => left.localeCompare(right))
+    );
+  } catch (error) {
+    console.error("Failed to load product colors:", error);
+    res.status(500).json({ message: "Unable to load product colors." });
+  }
+});
+
 router.get("/category-counts", async (req, res) => {
   try {
     const [result] = await Product.aggregate([
