@@ -57,6 +57,55 @@ export const registerUser = createAsyncThunk(
   }
 );
 
+export const uploadProfileImage = createAsyncThunk(
+  "auth/uploadProfileImage",
+  async (imageFile, { rejectWithValue }) => {
+    try {
+      const body = new FormData();
+      body.append("image", imageFile);
+      const response = await axios.put(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/profile/image`,
+        body,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+          },
+        }
+      );
+
+      localStorage.setItem("userInfo", JSON.stringify(response.data.user));
+      return response.data.user;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Unable to save profile image."
+      );
+    }
+  }
+);
+
+export const deleteProfileImage = createAsyncThunk(
+  "auth/deleteProfileImage",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.delete(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/profile/image`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+          },
+        }
+      );
+
+      localStorage.setItem("userInfo", JSON.stringify(response.data.user));
+      return response.data.user;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Unable to remove profile image."
+      );
+    }
+  }
+);
+
 // Slice
 const authSlice = createSlice({
   name: "auth",
@@ -99,6 +148,12 @@ const authSlice = createSlice({
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload.message;
+      })
+      .addCase(uploadProfileImage.fulfilled, (state, action) => {
+        state.user = action.payload;
+      })
+      .addCase(deleteProfileImage.fulfilled, (state, action) => {
+        state.user = action.payload;
       });
   },
 });

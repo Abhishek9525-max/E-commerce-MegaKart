@@ -1,8 +1,29 @@
 const express = require("express");
+require("dotenv").config();
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const {protect} = require('../middleware/authMiddleware')
+const multer = require("multer");
+const cloudinary = require("cloudinary").v2;
+const streamifier = require("streamifier");
 const router = express.Router();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const profileImageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, callback) => {
+    if (!file.mimetype.startsWith("image/")) {
+      return callback(new Error("Only image files can be uploaded."));
+    }
+    callback(null, true);
+  },
+});
 
 // @route POST /api/users/register
 // @desc Register a new user
@@ -38,6 +59,7 @@ router.post("/register", async (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
+            profileImage: user.profileImage,
           },
           token,
         });
@@ -81,6 +103,7 @@ router.post('/login', async(req,res)=>{
             name: user.name,
             email: user.email,
             role: user.role,
+            profileImage: user.profileImage,
           },
           token,
         })
@@ -99,6 +122,130 @@ router.post('/login', async(req,res)=>{
 router.get('/profile', protect, async(req,res)=>{
   res.json(req.user);
 
+});
+
+// @route PUT /api/users/profile/image
+// @desc Upload and save the authenticated user's profile image
+// @access Private
+router.put("/profile/image", protect, profileImageUpload.single("image"), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: "Choose an image to upload." });
+  }
+
+  try {
+    const previousUser = await User.findById(req.user._id).select("+profileImagePublicId");
+    if (!previousUser) {
+      return res.status(404).json({ message: "User account not found." });
+    }
+
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: "megakart/profiles",
+          resource_type: "image",
+          transformation: [
+            { width: 500, height: 500, crop: "fill", gravity: "face", quality: "auto", fetch_format: "auto" },
+          ],
+        },
+        (error, uploadedImage) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(uploadedImage);
+          }
+        }
+      );
+      streamifier.createReadStream(req.file.buffer).pipe(stream);
+    });
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        profileImage: result.secure_url,
+        profileImagePublicId: result.public_id,
+      },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!user) {
+      await cloudinary.uploader.destroy(result.public_id);
+      return res.status(404).json({ message: "User account not found." });
+    }
+
+    if (previousUser.profileImagePublicId) {
+      try {
+        await cloudinary.uploader.destroy(previousUser.profileImagePublicId);
+      } catch (error) {
+        console.error("Failed to remove replaced profile image:", error);
+      }
+    }
+
+    res.json({
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profileImage: user.profileImage,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to save profile image:", error);
+    res.status(500).json({ message: "Unable to save profile image." });
+  }
+});
+
+// @route DELETE /api/users/profile/image
+// @desc Remove the authenticated user's profile image
+// @access Private
+router.delete("/profile/image", protect, async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.user._id).select("+profileImagePublicId");
+    if (!currentUser) {
+      return res.status(404).json({ message: "User account not found." });
+    }
+
+    if (currentUser.profileImagePublicId) {
+      const result = await cloudinary.uploader.destroy(currentUser.profileImagePublicId);
+      if (result.result !== "ok" && result.result !== "not found") {
+        console.error("Cloudinary did not remove the profile image:", result);
+        return res.status(502).json({ message: "Unable to remove profile image." });
+      }
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { $unset: { profileImage: "", profileImagePublicId: "" } },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User account not found." });
+    }
+
+    res.json({
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profileImage: "",
+      },
+    });
+  } catch (error) {
+    console.error("Failed to remove profile image:", error);
+    res.status(500).json({ message: "Unable to remove profile image." });
+  }
+});
+
+router.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE") {
+    return res.status(413).json({ message: "Profile image must be 5 MB or smaller." });
+  }
+  if (error.message === "Only image files can be uploaded.") {
+    return res.status(400).json({ message: error.message });
+  }
+  next(error);
 });
 
 
