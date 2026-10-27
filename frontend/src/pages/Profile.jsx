@@ -73,9 +73,9 @@ const Profile = () => {
     .toUpperCase();
 
   return (
-    <div className='min-h-screen bg-[#F5F2ED] px-4 py-10 sm:px-6 lg:py-14'>
+    <div className='min-h-screen bg-[#F5F2ED] px-4 py-6 sm:px-6 lg:py-8'>
       <div className='mx-auto max-w-[1440px]'>
-        <header className='mb-8 border-b border-[#D8D2C8] pb-6 sm:mb-10'>
+        <header className='mb-6 border-b border-[#D8D2C8] pb-5 sm:mb-8'>
           <p className='luxury-eyebrow mb-2 text-[#A94F38]'>Your MegaKart account</p>
           <h1 className='text-4xl text-[#171714] sm:text-5xl'>My Account</h1>
           <p className='mt-2 text-sm text-[#77746D]'>
