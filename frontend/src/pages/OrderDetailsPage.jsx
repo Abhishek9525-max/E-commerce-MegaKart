@@ -97,7 +97,14 @@ const OrderDetailsPage = () => {
                         {item.name}
                       </Link>
                     </td>
-                    <td className="py-2 px-4">${item.price}</td>
+                    <td className="py-2 px-4">
+                      <span>${Number(item.price).toFixed(2)}</span>
+                      {Number(item.originalPrice) > Number(item.price) && (
+                        <span className="ml-2 text-xs text-gray-500 line-through">
+                          ${Number(item.originalPrice).toFixed(2)}
+                        </span>
+                      )}
+                    </td>
                     <td className="py-2 px-4">{item.quantity}</td>
                     <td className="py-2 px-4">${item.price * item.quantity}</td>
                   </tr>

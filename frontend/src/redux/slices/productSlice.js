@@ -16,6 +16,7 @@ export const fetchProductsByFilters = createAsyncThunk(
     category,
     material,
     brand,
+    collectionName,
     limit,
   }) => {
     const query = new URLSearchParams();
@@ -30,6 +31,7 @@ export const fetchProductsByFilters = createAsyncThunk(
     if (category) query.append("category", category);
     if (material) query.append("material", material);
     if (brand) query.append("brand", brand);
+    if (collectionName) query.append("collectionName", collectionName);
     if (limit) query.append("limit", limit);
 
     const response = await axios.get(

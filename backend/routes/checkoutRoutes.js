@@ -4,6 +4,7 @@ const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
 const { protect } = require("../middleware/authMiddleware");
+const mongoose = require("mongoose");
 
 const router = express.Router();
 
@@ -12,21 +13,77 @@ const router = express.Router();
 // @access Private
 
 router.post("/", protect, async (req, res) => {
-  const { checkoutItems, shippingAddress, paymentMethod, totalPrice } =
+  const { checkoutItems, shippingAddress, paymentMethod } =
     req.body;
 
-  if (!checkoutItems || checkoutItems.length === 0) {
+  if (!Array.isArray(checkoutItems) || checkoutItems.length === 0) {
     return res.status(400).json({ message: "no items in checkout" }); 
   }
   try {
+    if (checkoutItems.some(
+      (item) =>
+        !mongoose.Types.ObjectId.isValid(item.productId) ||
+        !Number.isSafeInteger(Number(item.quantity)) ||
+        Number(item.quantity) < 1
+    )) {
+      return res.status(400).json({ message: "Checkout items must have a valid product and positive whole-number quantity." });
+    }
+
+    const requestedProductIds = [
+      ...new Set(checkoutItems.map((item) => item.productId?.toString()).filter(Boolean)),
+    ];
+    const availableProducts = await Product.find({
+      _id: { $in: requestedProductIds },
+      isPublished: { $ne: false },
+    });
+    const productsById = new Map(
+      availableProducts.map((product) => [product._id.toString(), product])
+    );
+
+    if (
+      checkoutItems.some(
+        (item) => !productsById.has(item.productId?.toString())
+      )
+    ) {
+      return res.status(400).json({
+        message: "One or more products are no longer available for purchase.",
+      });
+    }
+
+    const pricedCheckoutItems = checkoutItems.map((item) => {
+      const product = productsById.get(item.productId.toString());
+      const regularPrice = Number(product.price) || 0;
+      const discountPrice = Number(product.discountPrice);
+      const unitPrice =
+        Number.isFinite(discountPrice) &&
+        discountPrice > 0 &&
+        discountPrice < regularPrice
+          ? discountPrice
+          : regularPrice;
+
+      return {
+        productId: product._id,
+        name: product.name,
+        image: product.images[0]?.url || item.image,
+        price: unitPrice,
+        originalPrice: unitPrice < regularPrice ? regularPrice : undefined,
+        quantity: Number(item.quantity),
+        size: item.size,
+        color: item.color,
+      };
+    });
+    const totalPriceInCents = pricedCheckoutItems.reduce(
+      (total, item) => total + Math.round(item.price * 100) * item.quantity,
+      0
+    );
+
     // Create a new checkout session
     const newCheckout = await Checkout.create({
-      
       user: req.user._id,
-      checkoutItems: checkoutItems,
+      checkoutItems: pricedCheckoutItems,
       shippingAddress,
       paymentMethod,
-      totalPrice,
+      totalPrice: totalPriceInCents / 100,
       paymentStatus: "Pending",
       isPaid: false,
     });

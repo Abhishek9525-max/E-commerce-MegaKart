@@ -16,11 +16,15 @@ const buildProductQuery = (filters, includeCategory = true) => {
     category,
     material,
     brand,
+    collectionName,
   } = filters;
   const query = {};
 
   if (collection && collection.toLocaleLowerCase() !== "all") {
     query.collections = collection;
+  }
+  if (collectionName) {
+    query.collections = { $in: collectionName.split(",") };
   }
   if (includeCategory && category && category.toLocaleLowerCase() !== "all") {
     query.category = category;
@@ -200,7 +204,10 @@ router.get("/", async (req, res) => {
       sortBy,
       limit,
     } = req.query;
-    const query = buildProductQuery(req.query);
+    const query = {
+      ...buildProductQuery(req.query),
+      isPublished: { $ne: false },
+    };
 
     // Sort Logic
     let sort = {};
@@ -236,10 +243,32 @@ router.get("/", async (req, res) => {
 // @route GET /api/products/category-counts
 // @desc Get filtered product totals grouped by category
 // @access Public
+router.get("/collections", async (req, res) => {
+  try {
+    const query = { isPublished: { $ne: false } };
+    if (req.query.gender) query.gender = req.query.gender;
+
+    const collections = await Product.distinct("collections", query);
+    res.json(
+      collections
+        .filter((name) => typeof name === "string" && name.trim())
+        .sort((left, right) => left.localeCompare(right))
+    );
+  } catch (error) {
+    console.error("Failed to load product collections:", error);
+    res.status(500).json({ message: "Unable to load product collections." });
+  }
+});
+
 router.get("/category-counts", async (req, res) => {
   try {
     const [result] = await Product.aggregate([
-      { $match: buildProductQuery(req.query, false) },
+      {
+        $match: {
+          ...buildProductQuery(req.query, false),
+          isPublished: { $ne: false },
+        },
+      },
       {
         $facet: {
           categories: [
@@ -268,7 +297,9 @@ router.get("/category-counts", async (req, res) => {
 
 router.get("/best-seller", async (req, res) => {
   try {
-    const bestSeller = await Product.findOne().sort({ rating: -1 });
+    const bestSeller = await Product.findOne({
+      isPublished: { $ne: false },
+    }).sort({ rating: -1 });
     if (bestSeller) {
       res.json(bestSeller);
     } else {
@@ -286,8 +317,30 @@ router.get("/best-seller", async (req, res) => {
 router.get("/new-arrivals", async (req, res) => {
   try {
     //Fetch latest 8 products
-    const newArrivals = await Product.find().sort({ createdAt: -1 }).limit(8);
+    const newArrivals = await Product.find({
+      isPublished: { $ne: false },
+    })
+      .sort({ createdAt: -1 })
+      .limit(8);
     res.json(newArrivals);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server error");
+  }
+});
+
+// @route GET /api/products/featured
+// @desc Retrieve published products marked as featured
+// @access Public
+router.get("/featured", async (req, res) => {
+  try {
+    const featuredProducts = await Product.find({
+      isPublished: { $ne: false },
+      isFeatured: true,
+    })
+      .sort({ createdAt: -1 })
+      .limit(8);
+    res.json(featuredProducts);
   } catch (error) {
     console.error(error);
     res.status(500).send("Server error");
@@ -299,7 +352,10 @@ router.get("/new-arrivals", async (req, res) => {
 // @access Public
 router.get("/:id", async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findOne({
+      _id: req.params.id,
+      isPublished: { $ne: false },
+    });
     if (product) {
       res.json(product);
     } else {
@@ -318,7 +374,10 @@ router.get("/similar/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const product = await Product.findById(id);
+    const product = await Product.findOne({
+      _id: id,
+      isPublished: { $ne: false },
+    });
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
@@ -326,6 +385,7 @@ router.get("/similar/:id", async (req, res) => {
       _id: { $ne: id }, // Exclude the current product ID
       gender: product.gender,
       category: product.category,
+      isPublished: { $ne: false },
     }).limit(4);
 
     res.json(similarProducts);

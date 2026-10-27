@@ -2,6 +2,7 @@ import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import React, { useEffect,useRef,useState } from 'react'
 import { Link } from 'react-router-dom';
 import axios from "axios";
+import { getProductPricing } from "../../utils/productPricing";
 
 const NewArrivals = () => {
   const scrollRef = useRef(null)
@@ -116,7 +117,9 @@ const NewArrivals = () => {
       onMouseUp={handleMouseUpOrLeave}
       onMouseLeave={handleMouseUpOrLeave}
       >
-        {newArrivals.map((product) => (
+        {newArrivals.map((product) => {
+          const pricing = getProductPricing(product);
+          return (
           <div key={product._id} className='relative min-w-[100%] overflow-hidden sm:min-w-[50%] lg:min-w-[30%]'>
             <img 
             src={product.images[0]?.url}
@@ -124,15 +127,28 @@ const NewArrivals = () => {
               className='h-[420px] w-full object-cover transition-transform duration-500 hover:scale-[1.02] sm:h-[500px]'
               draggable= 'false'
             />
+            {pricing.hasDiscount && (
+              <span className='absolute left-4 top-4 bg-[#A94F38] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-white'>
+                {pricing.discountPercent}% off
+              </span>
+            )}
             <div className='absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#171714]/85 via-[#171714]/55 to-transparent p-5 pt-16 text-white'>
               <Link to={`/product/${product._id}`} className='block'>
               <h4 className='font-medium'>{product.name}</h4>
-              <p className='mt-1'>${product.price}</p>
+              <p className='mt-1 flex items-baseline gap-2'>
+                <span>${pricing.price.toFixed(2)}</span>
+                {pricing.originalPrice && (
+                  <span className='text-sm text-white/70 line-through'>
+                    ${pricing.originalPrice.toFixed(2)}
+                  </span>
+                )}
+              </p>
               </Link>
 
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   )

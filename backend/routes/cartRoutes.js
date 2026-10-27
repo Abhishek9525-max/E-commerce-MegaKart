@@ -5,6 +5,44 @@ const { protect } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+const getEffectivePrice = (product) => {
+  const price = Number(product.price) || 0;
+  const discountPrice = Number(product.discountPrice);
+  return Number.isFinite(discountPrice) && discountPrice > 0 && discountPrice < price
+    ? discountPrice
+    : price;
+};
+
+const calculateCartTotal = (items) =>
+  items.reduce(
+    (total, item) =>
+      total + Math.round(Number(item.price) * 100) * item.quantity,
+    0
+  ) / 100;
+
+const refreshCartPricing = async (cart) => {
+  const productIds = [...new Set(cart.products.map((item) => item.productId.toString()))];
+  const products = await Product.find({ _id: { $in: productIds } });
+  const productsById = new Map(
+    products.map((product) => [product._id.toString(), product])
+  );
+
+  cart.products.forEach((item) => {
+    const product = productsById.get(item.productId.toString());
+    if (product) {
+      item.name = product.name;
+      item.image = product.images[0]?.url || item.image;
+      item.price = getEffectivePrice(product);
+      item.originalPrice = item.price < Number(product.price)
+        ? Number(product.price)
+        : undefined;
+    }
+  });
+  cart.totalPrice = calculateCartTotal(cart.products);
+  await cart.save();
+  return cart;
+};
+
 // Helper function to get a cart by user ID or guest Id
 const getCart = async (userId, guestId) => {
   if (userId) {
@@ -22,7 +60,10 @@ router.post("/", async (req, res) => {
   const { productId, quantity, size, color, guestId, userId } = req.body;
 
   try {
-    const product = await Product.findById(productId);
+    const product = await Product.findOne({
+      _id: productId,
+      isPublished: { $ne: false },
+    });
     if (!product) return res.status(404).json({ message: "product not found" });
 
     // Determine if the user is logged in or guest
@@ -40,13 +81,21 @@ router.post("/", async (req, res) => {
       if (productIndex > -1) {
         //If the product already exists, update the cart quantity
         cart.products[productIndex].quantity += quantity;
+        cart.products[productIndex].price = getEffectivePrice(product);
+        cart.products[productIndex].originalPrice =
+          cart.products[productIndex].price < Number(product.price)
+            ? Number(product.price)
+            : undefined;
       } else {
         //add new product
         cart.products.push({
           productId,
           name: product.name,
           image: product.images[0].url,
-          price: product.price,
+          price: getEffectivePrice(product),
+          originalPrice: getEffectivePrice(product) < Number(product.price)
+            ? Number(product.price)
+            : undefined,
           size,
           color,
           quantity,
@@ -54,10 +103,7 @@ router.post("/", async (req, res) => {
       }
 
       // Recalculate the total price
-      cart.totalPrice = cart.products.reduce(
-        (acc, item) => acc + item.price * item.quantity,
-        0
-      );
+      cart.totalPrice = calculateCartTotal(cart.products);
 
       await cart.save();
       return res.status(200).json(cart);
@@ -71,13 +117,18 @@ router.post("/", async (req, res) => {
             productId,
             name: product.name,
             image: product.images[0].url,
-            price: product.price,
+            price: getEffectivePrice(product),
+            originalPrice: getEffectivePrice(product) < Number(product.price)
+              ? Number(product.price)
+              : undefined,
             size,
             color,
             quantity,
           },
         ],
-        totalPrice: product.price * quantity,
+        totalPrice: calculateCartTotal([
+          { price: getEffectivePrice(product), quantity },
+        ]),
       });
       return res.status(201).json(newCart);
     }
@@ -106,15 +157,24 @@ router.put("/", async (req, res) => {
     if (productIndex > -1) {
       //update quantity
       if (quantity > 0) {
+        const product = await Product.findOne({
+          _id: productId,
+          isPublished: { $ne: false },
+        });
+        if (!product) {
+          return res.status(404).json({ message: "Product is no longer available." });
+        }
         cart.products[productIndex].quantity = quantity;
+        cart.products[productIndex].price = getEffectivePrice(product);
+        cart.products[productIndex].originalPrice =
+          cart.products[productIndex].price < Number(product.price)
+            ? Number(product.price)
+            : undefined;
       } else {
         cart.products.splice(productIndex, 1); // Remove product if quantity is 0
       }
 
-      cart.totalPrice = cart.products.reduce(
-        (acc, item) => acc + item.price * item.quantity,
-        0
-      );
+      cart.totalPrice = calculateCartTotal(cart.products);
       await cart.save();
       return res.status(200).json(cart);
     } else {
@@ -148,10 +208,7 @@ router.delete("/", async (req, res) => {
     if (productIndex > -1) {
       cart.products.splice(productIndex, 1);
 
-      cart.totalPrice = cart.products.reduce(
-        (acc, item) => acc + item.price * item.quantity,
-        0
-      );
+      cart.totalPrice = calculateCartTotal(cart.products);
       await cart.save();
       return res.status(200).json(cart);
     } else {
@@ -172,7 +229,7 @@ router.get("/", async (req, res) => {
   try {
     const cart = await getCart(userId, guestId);
     if (cart) {
-      res.json(cart);
+      res.json(await refreshCartPricing(cart));
     } else {
       res.status(404).json({ message: "Cart not found" });
     }
@@ -216,11 +273,7 @@ router.post("/merge", protect, async (req, res) => {
           }
         });
 
-        userCart.totalPrice = userCart.products.reduce(
-          (acc, item) => acc + item.price * item.quantity,
-          0
-        );
-        await userCart.save();
+        await refreshCartPricing(userCart);
 
         // Remove the guest cart after merging
         try{
@@ -233,7 +286,7 @@ router.post("/merge", protect, async (req, res) => {
         // If the user has no existing cart, assign the guest cart to the user
         guestCart.user = req.user._id;
         guestCart.guestId = undefined;
-        await guestCart.save();
+        await refreshCartPricing(guestCart);
 
         res.status(200).json(guestCart);
       }

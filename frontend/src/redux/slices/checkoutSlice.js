@@ -38,8 +38,8 @@ const checkoutSlice = createSlice({
       state.checkout= action.payload;
     })
     .addCase(createCheckout.rejected, (state,action)=>{
-      state.loading = true;
-      state.error= action.payload.message;
+      state.loading = false;
+      state.error = action.payload?.message || action.error.message || "Unable to create checkout.";
     })
   }
 })

@@ -25,44 +25,62 @@ const OrderManagement = () => {
     // console.log({ id: orderId, status });
   };
 
-  if(loading) return <p>Loading...</p>
-  if(error) return <p>Error: {error}</p>
+  if(loading) return <p className="p-8 text-sm text-[#77766e]">Loading orders…</p>
+  if(error) return <p role="alert" className="border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">Unable to load orders: {error}</p>
+
+  const statusStyles = {
+    Processing: "bg-amber-50 text-amber-700",
+    Shipped: "bg-sky-50 text-sky-700",
+    Delivered: "bg-emerald-50 text-emerald-700",
+    Cancelled: "bg-rose-50 text-rose-700",
+  };
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-6 ">Order Management</h2>
+    <div className="mx-auto max-w-[1440px] space-y-7">
+      <header className="flex flex-col justify-between gap-4 border-b border-[#e7e4dc] pb-6 sm:flex-row sm:items-end">
+        <div>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#85847c]">Fulfillment</p>
+          <h1 className="text-3xl font-medium text-[#292b25] sm:text-4xl">Orders &amp; Fulfillment</h1>
+          <p className="mt-2 text-sm text-[#77766e]">Track orders and keep each delivery moving.</p>
+        </div>
+        <span className="self-start border border-[#e7e4dc] bg-white px-4 py-2.5 text-xs font-medium text-[#686961] sm:self-auto">
+          {orders.length} {orders.length === 1 ? "order" : "orders"}
+        </span>
+      </header>
 
-      <div className="overflow-x-auto shadow-md sm:rounded-lg">
-        <table className="min-w-full text-left text-gray-500">
-          <thead className="bg-gray-100 text-xs uppercase text-gray-700">
+      <div className="overflow-hidden border border-[#e7e4dc] bg-white shadow-[0_8px_24px_rgba(39,46,32,0.035)]">
+        <div className="overflow-x-auto">
+        <table className="min-w-full text-left">
+          <thead className="bg-[#faf9f6] text-[10px] uppercase tracking-[0.12em] text-[#85847c]">
             <tr>
-              <th className="py-3 px-4">Order ID</th>
-              <th className="py-3 px-4">Customer</th>
-              <th className="py-3 px-4">Total Price</th>
-              <th className="py-3 px-4">Status</th>
-              <th className="py-3 px-4">Actions</th>
+              <th className="px-5 py-3.5 font-semibold sm:px-6">Order</th>
+              <th className="px-5 py-3.5 font-semibold sm:px-6">Customer</th>
+              <th className="px-5 py-3.5 font-semibold sm:px-6">Total</th>
+              <th className="px-5 py-3.5 font-semibold sm:px-6">Status</th>
+              <th className="px-5 py-3.5 font-semibold sm:px-6">Action</th>
             </tr>
           </thead>
         
-        <tbody>
+        <tbody className="divide-y divide-[#eeece6] text-sm">
           {orders.length > 0 ? (
             orders.map((order) => (
               <tr
                 key={order._id}
-                className="border-b hover:bg-gray-50 cursor-pointer"
+                className="transition-colors hover:bg-[#fcfbf9]"
               >
-                <td className="py-4 px-4 font-medium text-gray-900 whitespace-nowrap">
+                <td className="whitespace-nowrap px-5 py-4 font-medium text-[#414b36] sm:px-6">
                   #{order._id}
                 </td>
-                <td className="p-4">{order.user?.name ?? "Unknown user"}</td>
-                <td className="p-4">{order.totalPrice.toFixed(2)}</td>
-                <td className="p-4">
+                <td className="whitespace-nowrap px-5 py-4 text-[#55564f] sm:px-6">{order.user?.name ?? "Unknown customer"}</td>
+                <td className="whitespace-nowrap px-5 py-4 text-[#292b25] sm:px-6">${Number(order.totalPrice).toFixed(2)}</td>
+                <td className="whitespace-nowrap px-5 py-4 sm:px-6">
                   <select
                     value={order.status}
                     onChange={(e) =>
                       handleStatusChange(order._id, e.target.value)
                     }
-                    className="bg-gray-50 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
+                    aria-label={`Status for order ${order._id}`}
+                    className={`rounded-full border-0 px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#414b36]/20 ${statusStyles[order.status] ?? "bg-stone-100 text-stone-600"}`}
                   >
                     <option value="Processing">Processing</option>
                     <option value="Shipped">Shipped</option>
@@ -70,21 +88,23 @@ const OrderManagement = () => {
                     <option value="Cancelled">Cancelled</option>
                   </select>
                 </td>
-                <td className="p-4">
+                <td className="whitespace-nowrap px-5 py-4 sm:px-6">
                   <button
                     onClick={() => handleStatusChange(order._id, "Delivered")}
-                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                    className="text-xs font-semibold text-[#59634c] hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={order.status === "Delivered"}
                   >Mark as Delivered</button>
                 </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan={5} className="p-4 text-center text-gray-500">No Orders Found.</td>
+              <td colSpan={5} className="px-6 py-12 text-center text-sm text-[#85847c]">No orders found.</td>
             </tr>
           )}
         </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

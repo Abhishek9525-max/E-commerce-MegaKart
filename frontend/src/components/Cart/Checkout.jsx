@@ -12,6 +12,8 @@ const Checkout = () => {
   const { user } = useSelector((state) => state.auth);
 
   const [checkoutId, setCheckoutId] = useState(null);
+  const [checkoutTotal, setCheckoutTotal] = useState(null);
+  const [checkoutError, setCheckoutError] = useState("");
   const [shippingAddress, setShippingAddress] = useState({
     firstName: "",
     lastName: "",
@@ -32,18 +34,23 @@ const Checkout = () => {
 
   const handleCreateCheckout = async (e) => {
     e.preventDefault();
-    // setCheckoutId(123);
+    setCheckoutError("");
     if (cart && cart.products.length > 0) {
-      const res = await dispatch(
-        createCheckout({
-          checkoutItems: cart.products,
-          shippingAddress,
-          paymentMethod: "Paypal",
-          totalPrice: cart.totalPrice,
-        })
-      );
-      if (res.payload && res.payload._id) {
-        setCheckoutId(res.payload._id); // Set checkout ID if checkout was successful
+      try {
+        const checkout = await dispatch(
+          createCheckout({
+            checkoutItems: cart.products,
+            shippingAddress,
+            paymentMethod: "Paypal",
+            totalPrice: cart.totalPrice,
+          })
+        ).unwrap();
+        setCheckoutId(checkout._id);
+        setCheckoutTotal(checkout.totalPrice);
+      } catch (requestError) {
+        setCheckoutError(
+          requestError?.message || "Unable to prepare checkout. Please try again."
+        );
       }
     }
   };
@@ -220,6 +227,11 @@ const Checkout = () => {
             />
           </div>
           <div className="mt-6">
+            {checkoutError && (
+              <p role="alert" className="mb-4 rounded border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                {checkoutError}
+              </p>
+            )}
             {!checkoutId ? (
               <button
                 type="submit"
@@ -233,7 +245,7 @@ const Checkout = () => {
                 <h3 className="text-lg mb-4">Pay with PayPal</h3>
                 {/* PayPal component  */}
                 <PayPalButton
-                  amount={cart.totalPrice}
+                  amount={checkoutTotal}
                   onSuccess={handlePaymentSuccess}
                   onError={() => alert("Payment failed. Try again.")}
                 />
@@ -263,13 +275,23 @@ const Checkout = () => {
                   <p className="text-gray-500">Color: {product.color}</p>
                 </div>
               </div>
-              <p className="text-xl ">${product.price?.toLocaleString()}</p>
+              <div className="text-right">
+                <p className="text-xl text-[#A94F38]">
+                  ${(Number(product.price) * product.quantity).toFixed(2)}
+                </p>
+                {Number(product.originalPrice) > Number(product.price) && (
+                  <p className="text-sm text-[#99958c] line-through">
+                    ${(Number(product.originalPrice) * product.quantity).toFixed(2)}
+                  </p>
+                )}
+                <p className="text-xs text-gray-500">Qty: {product.quantity}</p>
+              </div>
             </div>
           ))}
         </div>
         <div className="flex justify-between items-center text-lg mb-4">
           <p>Subtotal</p>
-          <p>${cart.totalPrice?.toLocaleString()}</p>
+          <p>${Number(cart.totalPrice || 0).toFixed(2)}</p>
         </div>
         <div className="flex justify-between items-center text-lg">
           <p>Shipping</p>
@@ -277,7 +299,7 @@ const Checkout = () => {
         </div>
         <div className="flex justify-between items-center text-lg mt-4 border-t pt-4">
           <p>Total</p>
-          <p>${cart.totalPrice?.toLocaleString()}</p>
+          <p>${Number(checkoutTotal ?? cart.totalPrice ?? 0).toFixed(2)}</p>
         </div>
       </div>
     </div>

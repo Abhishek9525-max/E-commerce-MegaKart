@@ -1,47 +1,48 @@
 import React, { useState } from "react";
-import { FaBars } from "react-icons/fa";
+import { FaBars, FaTimes } from "react-icons/fa";
 import AdminSidebar from "./AdminSidebar";
-import { Outlet } from 'react-router-dom';
-
+import { Outlet } from "react-router-dom";
 
 const AdminLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
+    setIsSidebarOpen((isOpen) => !isOpen);
   };
-  return (
-    <div className="min-h-screen flex flex-col md:flex-row relative">
-      {/* Mobile Toggle Button  */}
-      <div className="flex md:hidden p-4 bg-gray-900 text-white z-20">
-        <button onClick={toggleSidebar}>
-          <FaBars size={24} />
-        </button>
-        <h1 className="ml-4 text-xl font-medium ">Admin Dashboard</h1>
-      </div>
 
-      {/* Overlay for mobile Sidebar  */}
+  return (
+    <div className="relative flex min-h-screen flex-col bg-[#f7f6f2] md:flex-row">
+      <header className="z-20 flex items-center gap-4 border-b border-[#e8e5de] bg-white px-5 py-4 text-[#414b36] md:hidden">
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          aria-label={isSidebarOpen ? "Close admin navigation" : "Open admin navigation"}
+          aria-expanded={isSidebarOpen}
+        >
+          {isSidebarOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+        </button>
+        <span className="font-serif text-lg font-semibold">Admin Suite</span>
+      </header>
+
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 z-10 bg-black bg-opacity-50 md:hidden"
+          className="fixed inset-0 z-20 bg-black/30 md:hidden"
           onClick={toggleSidebar}
-        ></div>
+          aria-hidden="true"
+        />
       )}
 
-      {/* Sidebar  */}
       <div
-        className={`bg-gray-900 w-64 min-h-screen text-white absolute md:relative tranform ${
+        className={`fixed inset-y-0 left-0 z-30 w-[300px] overflow-y-auto border-r border-[#e8e5de] bg-white transition-transform duration-300 md:static md:z-auto md:translate-x-0 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } transition-transform duration-300 md:translate-x-0 md:static md:block z-20`}
+        }`}
       >
-        {/* Sidebar  */}
-        <AdminSidebar/>
+        <AdminSidebar onNavigate={() => setIsSidebarOpen(false)} />
       </div>
 
-      {/* Main Content  */}
-      <div className="flex-grow p-6 overflow-auto">
-        <Outlet/>
-      </div>
+      <main className="min-w-0 flex-grow overflow-auto bg-[#f7f6f2] p-4 sm:p-8">
+        <Outlet />
+      </main>
     </div>
   );
 };

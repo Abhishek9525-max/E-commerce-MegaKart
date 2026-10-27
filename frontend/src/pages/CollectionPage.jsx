@@ -68,6 +68,7 @@ const CollectionPage = () => {
     };
 
     addFilter('category', 'Category', categoryLabels[params.get('category')] || params.get('category'));
+    addFilter('collectionName', 'Collection', params.get('collectionName')?.split(',').join(', '));
     addFilter('gender', 'Gender', params.get('gender'));
     addFilter('material', 'Fabric', params.get('material')?.split(',').join(', '));
     addFilter('color', 'Color', params.get('color')?.split(',').join(', '));
@@ -130,10 +131,10 @@ const CollectionPage = () => {
 
       {/* Filter Sidebar  */}
       <div ref={sidebarRef}
-      className={`${isSidebarOpen  ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 z-50 left-0 w-64 border-r border-gray-200 bg-[#F5F2ED] overflow-y-auto transition-transform duration-300 lg:static lg:translate-x-0`}>
+      className={`${isSidebarOpen  ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 z-50 left-0 w-64 border-r border-gray-200 bg-[#F5F2ED] overflow-y-auto transition-transform duration-300 lg:static lg:w-64 lg:shrink-0 lg:translate-x-0`}>
         <FilterSidebar collection={collection} />
       </div>
-      <div className='flex-grow p-4 sm:p-8'>
+      <div className='min-w-0 flex-1 p-4 sm:p-8'>
         <div className='mb-6'>
           <div>
             <p className='luxury-eyebrow mb-2 text-gray-500'>The MegaKart edit</p>

@@ -9,6 +9,7 @@ import {
   fetchSimilarProducts,
 } from "../../redux/slices/productSlice";
 import { addToCart } from "../../redux/slices/cartSlice";
+import { getProductPricing } from "../../utils/productPricing";
 
 const ProductDetails = ({ productId, showSimilarProducts = true }) => {
   const { id } = useParams();
@@ -95,7 +96,8 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
   const images = selectedProduct.images || [];
   const sizes = selectedProduct.sizes || [];
   const colors = selectedProduct.colors || [];
-  const currentPrice = selectedProduct.price;
+  const pricing = getProductPricing(selectedProduct);
+  const currentPrice = pricing.price;
   const productFacts = [
     { label: "Brand", value: selectedProduct.brand },
     { label: "Material", value: selectedProduct.material },
@@ -132,7 +134,7 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
               </div>
             )}
 
-            <div className="relative min-h-[340px] flex-1 overflow-hidden bg-[#F5F2ED] sm:min-h-[480px]">
+            <div className="relative aspect-[3/4] w-full max-w-[560px] flex-1 overflow-hidden bg-[#F5F2ED]">
               {mainImage && (
                 <img
                   src={mainImage}
@@ -191,6 +193,21 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
               <span className="text-xl font-semibold text-[#171714]">
                 ${Number(currentPrice).toFixed(2)}
               </span>
+              {pricing.originalPrice && (
+                <>
+                  <span className="text-sm font-medium text-[#99958c] line-through">
+                    ${pricing.originalPrice.toFixed(2)}
+                  </span>
+                  <span className="rounded-sm bg-[#F7E9E5] px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#A94F38]">
+                    {Math.round(
+                      ((pricing.originalPrice - currentPrice) /
+                        pricing.originalPrice) *
+                        100
+                    )}
+                    % off
+                  </span>
+                </>
+              )}
             </div>
 
             {selectedProduct.description && (

@@ -64,54 +64,70 @@ useEffect(()=>{
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-4">User Management</h2>
-      {loading && <p>Loading...</p>}
-      {error && <p>Error: {error}</p>}
-      {/* Add New User Form  */}
-      <div className="p-6 rounded-lg mb-6">
-        <h3 className="text-lg font-bold mb-4">Add New User</h3>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700">Name</label>
+    <div className="mx-auto max-w-[1440px] space-y-7">
+      <header className="flex flex-col justify-between gap-4 border-b border-[#e7e4dc] pb-6 sm:flex-row sm:items-end">
+        <div>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#85847c]">Community</p>
+          <h1 className="text-3xl font-medium text-[#292b25] sm:text-4xl">Customer Directory</h1>
+          <p className="mt-2 text-sm text-[#77766e]">Manage customer accounts and access roles.</p>
+        </div>
+        <span className="self-start border border-[#e7e4dc] bg-white px-4 py-2.5 text-xs font-medium text-[#686961] sm:self-auto">
+          {users.length} {users.length === 1 ? "account" : "accounts"}
+        </span>
+      </header>
+      {loading && <p className="text-sm text-[#77766e]">Loading customers…</p>}
+      {error && <p role="alert" className="border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">Unable to load customers: {error}</p>}
+
+      <section className="border border-[#e7e4dc] bg-white p-5 shadow-[0_8px_24px_rgba(39,46,32,0.035)] sm:p-6">
+        <div className="mb-5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#85847c]">New account</p>
+          <h2 className="mt-1 text-xl font-medium text-[#292b25]">Add a user</h2>
+        </div>
+        <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div>
+            <label htmlFor="new-user-name" className="mb-1.5 block text-xs font-medium text-[#55564f]">Name</label>
             <input
+              id="new-user-name"
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full p-2 border rounded"
+              className="w-full border border-[#dedbd3] bg-[#fcfbf9] px-3 py-2.5 text-sm text-[#292b25] outline-none transition focus:border-[#68725b] focus:ring-2 focus:ring-[#414b36]/10"
               required
             />
           </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Email</label>
+          <div>
+            <label htmlFor="new-user-email" className="mb-1.5 block text-xs font-medium text-[#55564f]">Email</label>
             <input
-              type="text"
+              id="new-user-email"
+              type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full p-2 border rounded"
+              className="w-full border border-[#dedbd3] bg-[#fcfbf9] px-3 py-2.5 text-sm text-[#292b25] outline-none transition focus:border-[#68725b] focus:ring-2 focus:ring-[#414b36]/10"
               required
             />
           </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Password</label>
+          <div>
+            <label htmlFor="new-user-password" className="mb-1.5 block text-xs font-medium text-[#55564f]">Password</label>
             <input
+              id="new-user-password"
               type="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full p-2 border rounded"
+              className="w-full border border-[#dedbd3] bg-[#fcfbf9] px-3 py-2.5 text-sm text-[#292b25] outline-none transition focus:border-[#68725b] focus:ring-2 focus:ring-[#414b36]/10"
               required
             />
           </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Role</label>
+          <div>
+            <label htmlFor="new-user-role" className="mb-1.5 block text-xs font-medium text-[#55564f]">Role</label>
             <select
+              id="new-user-role"
               name="role"
               value={formData.role}
               onChange={handleChange}
-              className="w-full p-2 border rounded "
+              className="w-full border border-[#dedbd3] bg-[#fcfbf9] px-3 py-2.5 text-sm text-[#292b25] outline-none transition focus:border-[#68725b] focus:ring-2 focus:ring-[#414b36]/10"
             >
               <option value="customer">Customer</option>
               <option value="admin">Admin</option>
@@ -119,53 +135,74 @@ useEffect(()=>{
           </div>
           <button
             type="submit"
-            className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+            className="inline-flex min-h-10 items-center justify-center bg-[#414b36] px-5 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-white transition-colors hover:bg-[#30392a] sm:col-span-2 xl:col-span-4 xl:justify-self-start"
           >
             Add User
           </button>
         </form>
-      </div>
+      </section>
 
-      {/* User List Management  */}
-      <div className="overflow-x-auto shadow-md sm:rounded-lg">
-        <table className="min-w-full text-left text-gray-500">
-          <thead className="bg-gray-100 text-xs uppercase text-gray-700">
+      <section className="overflow-hidden border border-[#e7e4dc] bg-white shadow-[0_8px_24px_rgba(39,46,32,0.035)]">
+        <div className="border-b border-[#eeece6] px-5 py-5 sm:px-6">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#85847c]">Account access</p>
+          <h2 className="mt-1 text-xl font-medium text-[#292b25]">All users</h2>
+        </div>
+        <div className="overflow-x-auto">
+        <table className="min-w-full text-left">
+          <thead className="bg-[#faf9f6] text-[10px] uppercase tracking-[0.12em] text-[#85847c]">
             <tr>
-              <th className="py-3 px-4 ">Name</th>
-              <th className="py-3 px-4 ">Email</th>
-              <th className="py-3 px-4 ">Role</th>
-              <th className="py-3 px-4 ">Actions</th>
+              <th className="px-5 py-3.5 font-semibold sm:px-6">Name</th>
+              <th className="px-5 py-3.5 font-semibold sm:px-6">Email</th>
+              <th className="px-5 py-3.5 font-semibold sm:px-6">Role</th>
+              <th className="px-5 py-3.5 font-semibold sm:px-6">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user._id} className="border-b hover:bg-gray-50">
-                <td className="p-4 font-medium text-gray-900 whitespace-nowrap">
-                  {user.name}
+          <tbody className="divide-y divide-[#eeece6] text-sm">
+            {users.length > 0 ? users.map((listedUser) => {
+              const isCurrentUser = listedUser._id === user?._id;
+
+              return (
+              <tr key={listedUser._id} className="transition-colors hover:bg-[#fcfbf9]">
+                <td className="whitespace-nowrap px-5 py-4 font-medium text-[#292b25] sm:px-6">
+                  {listedUser.name}
                 </td>
-                <td className="p-4 ">{user.email}</td>
-                <td className="p-4 ">
+                <td className="whitespace-nowrap px-5 py-4 text-[#55564f] sm:px-6">{listedUser.email}</td>
+                <td className="px-5 py-4 sm:px-6">
                   <select
-                    value={user.role}
-                    onChange={(e) => handleRoleChange(user._id, e.target.value)}
+                    value={listedUser.role}
+                    onChange={(e) => handleRoleChange(listedUser._id, e.target.value)}
+                    aria-label={`Role for ${listedUser.name}`}
+                    className="border border-[#dedbd3] bg-white px-3 py-2 text-xs text-[#41443b] outline-none focus:border-[#68725b] focus:ring-2 focus:ring-[#414b36]/10"
                   >
                     <option value="customer">Customer</option>
                     <option value="admin">Admin</option>
                   </select>
                 </td>
-                <td className="p-4 ">
-                  <button
-                    onClick={() => handleDeleteUser(user._id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                  >
-                    Delete
-                  </button>
+                <td className="whitespace-nowrap px-5 py-4 sm:px-6">
+                  {isCurrentUser ? (
+                    <span className="text-xs font-medium text-[#85847c]">You</span>
+                  ) : (
+                    <button
+                      onClick={() => handleDeleteUser(listedUser._id)}
+                      className="text-xs font-semibold text-[#a94f38] hover:underline"
+                    >
+                      Delete
+                    </button>
+                  )}
                 </td>
               </tr>
-            ))}
+            );
+            }) : (
+              <tr>
+                <td colSpan={4} className="px-6 py-12 text-center text-sm text-[#85847c]">
+                  {loading ? "Loading accounts…" : "No users found."}
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
-      </div>
+        </div>
+      </section>
     </div>
   );
 };

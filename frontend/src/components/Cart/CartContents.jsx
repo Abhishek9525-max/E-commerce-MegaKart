@@ -92,7 +92,12 @@ const CartContents = ({ cart, userId, guestId }) => {
             </div>
           </div>
           <div>
-            <p className="font-sans">$ {product.price.toLocaleString()}</p>
+            <p className="font-sans">${Number(product.price).toFixed(2)}</p>
+            {Number(product.originalPrice) > Number(product.price) && (
+              <p className="mt-1 font-sans text-xs text-[#99958c] line-through">
+                ${Number(product.originalPrice).toFixed(2)}
+              </p>
+            )}
             <button
               type="button"
               onClick={() =>

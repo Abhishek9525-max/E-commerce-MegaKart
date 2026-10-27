@@ -11,6 +11,7 @@ const FilterSidebar = ({ collection }) => {
   const [filters, setFilters] = useState({
     category: '',
     gender: '',
+    collectionName: [],
     color: [],
     size: [],
     material: [],
@@ -20,6 +21,9 @@ const FilterSidebar = ({ collection }) => {
   })
 
   const [priceRange, setPriceRange] = useState([0, 100])
+  const [availableCollections, setAvailableCollections] = useState([]);
+  const [collectionsError, setCollectionsError] = useState(false);
+  const selectedGender = new URLSearchParams(searchParamsKey).get('gender');
   const categories = [
     { value: 'Top Wear', label: 'Shirts & Tops' },
     { value: 'Bottom Wear', label: 'Trousers & Jeans' },
@@ -61,6 +65,7 @@ const FilterSidebar = ({ collection }) => {
     setFilters({
       category: params.category || '',
       gender: params.gender || '',
+      collectionName: params.collectionName ? params.collectionName.split(',') : [],
       color: params.color ? params.color.split(',') : [],
       size: params.size ? params.size.split(',') : [],
       material: params.material ? params.material.split(',') : [],
@@ -101,6 +106,31 @@ const FilterSidebar = ({ collection }) => {
     fetchCategoryCounts();
     return () => controller.abort();
   }, [collection, searchParamsKey]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const params = new URLSearchParams();
+    if (selectedGender) params.set('gender', selectedGender);
+
+    const fetchCollections = async () => {
+      setCollectionsError(false);
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/api/products/collections?${params}`,
+          { signal: controller.signal }
+        );
+        setAvailableCollections(response.data);
+      } catch (error) {
+        if (!axios.isCancel(error)) {
+          console.error('Failed to fetch available collections:', error);
+          setCollectionsError(true);
+        }
+      }
+    };
+
+    fetchCollections();
+    return () => controller.abort();
+  }, [selectedGender]);
 
 
   const handleFilterChange = (e) => {
@@ -175,6 +205,7 @@ const clearAllFilters = () => {
   setFilters({
     category: '',
     gender: gender || '',
+    collectionName: [],
     color: [],
     size: [],
     material: [],
@@ -189,6 +220,7 @@ const activeFilterCount = (() => {
   const params = new URLSearchParams(searchParamsKey);
   return (
     Number(params.has('category')) +
+    (params.get('collectionName')?.split(',').filter(Boolean).length || 0) +
     (params.get('color')?.split(',').filter(Boolean).length || 0) +
     (params.get('size')?.split(',').filter(Boolean).length || 0) +
     (params.get('material')?.split(',').filter(Boolean).length || 0) +
@@ -234,7 +266,7 @@ return (
         {categories.map(({ value, label }) => (
           <label
             key={value}
-            className={`mb-2 flex min-h-12 cursor-pointer items-center gap-3 rounded-md border px-3.5 py-2 transition-colors ${
+            className={`mb-2 flex min-h-10 cursor-pointer items-center gap-2.5 rounded-md border px-3 py-1.5 transition-colors ${
               filters.category === value
                 ? 'border-[#414B36] bg-[#F8F8F5]'
                 : 'border-[#D8D2C8] bg-white hover:border-[#A7A197]'
@@ -246,9 +278,9 @@ return (
               value={value}
               onChange={handleFilterChange}
               checked={filters.category === value}
-              className='h-5 w-5 shrink-0 accent-[#414B36]'
+              className='h-4 w-4 shrink-0 accent-[#414B36]'
             />
-            <span className='flex-1 text-base text-[#171714]'>{label}</span>
+            <span className='flex-1 text-sm text-[#171714]'>{label}</span>
             <span className={`text-sm ${filters.category === value ? 'font-medium text-[#414B36]' : 'text-[#77746D]'}`}>
               {categoryCounts?.categories?.[value] ?? (categoryCounts ? 0 : '')}
             </span>
@@ -329,7 +361,7 @@ return (
         <h4 className='mb-3 text-sm font-medium uppercase tracking-[0.08em] text-[#171714]'>
           Material
         </h4>
-        <div className='space-y-2'>
+        <div className='max-h-28 space-y-2 overflow-y-auto pr-1'>
           {materials.map((material) => (
             <label
               key={material}
@@ -349,12 +381,42 @@ return (
         </div>
       </div>
 
+      <div className='mb-5 border-b border-[#EAE6DF] pb-5'>
+        <h4 className='mb-3 text-sm font-medium uppercase tracking-[0.08em] text-[#171714]'>
+          Collections
+        </h4>
+        {collectionsError ? (
+          <p role='alert' className='text-xs text-[#A94F38]'>Unable to load collections.</p>
+        ) : availableCollections.length ? (
+          <div className='max-h-28 space-y-2 overflow-y-auto pr-1'>
+            {availableCollections.map((collectionName) => (
+              <label
+                key={collectionName}
+                className='group flex cursor-pointer items-center gap-3 text-sm text-[#5C5A54] transition-colors hover:text-[#171714]'
+              >
+                <input
+                  type='checkbox'
+                  name='collectionName'
+                  value={collectionName}
+                  checked={filters.collectionName.includes(collectionName)}
+                  onChange={handleFilterChange}
+                  className='h-[17px] w-[17px] shrink-0 accent-[#414B36]'
+                />
+                <span className='leading-5'>{collectionName}</span>
+              </label>
+            ))}
+          </div>
+        ) : (
+          <p className='text-xs text-[#77746D]'>No collections available.</p>
+        )}
+      </div>
+
       {/* Brand Filter  */}
       <div className='mb-5 border-b border-[#EAE6DF] pb-5'>
         <h4 className='mb-3 text-sm font-medium uppercase tracking-[0.08em] text-[#171714]'>
           Brand
         </h4>
-        <div className='space-y-2'>
+        <div className='max-h-28 space-y-2 overflow-y-auto pr-1'>
           {brands.map((brand) => (
             <label
               key={brand}

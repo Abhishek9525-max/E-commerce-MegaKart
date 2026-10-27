@@ -19,6 +19,7 @@ const checkoutItemSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    originalPrice: Number,
     quantity:{
       type: Number,
       required: true,
