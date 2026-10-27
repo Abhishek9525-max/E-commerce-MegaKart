@@ -57,12 +57,19 @@ const Home = () => {
         )}
       </section>
 
-      <div className="container mx-auto px-4 py-12">
-        <div className="mb-8 text-center">
-          <p className="luxury-eyebrow mb-2 text-[#77746D]">Made for every day</p>
-          <h2 className="text-4xl sm:text-5xl">Top Wear for Women</h2>
+      <div className="bg-[#FCF9F8] px-4 py-8 sm:py-10">
+        <div className="mx-auto mb-8 max-w-5xl text-center">
+          <p className="luxury-eyebrow mb-2 text-[#A94F38]">Wardrobe foundations</p>
+          <h2 className="text-4xl sm:text-5xl">
+            Top Wear &amp; Bottom Wear for Women
+          </h2>
+          <p className="mx-auto mt-2 max-w-4xl text-base leading-relaxed text-[#414B5A] sm:text-lg">
+            Essential staples meticulously cut from Irish linen, organic combed denim, and refined crepe for effortless versatility.
+          </p>
         </div>
-        <ProductGrid products={products} loading={loading} error={error} />
+        <div className="container mx-auto">
+          <ProductGrid products={products} loading={loading} error={error} />
+        </div>
       </div>
       <FeaturedCollection />
       <FeaturesSection />

@@ -121,20 +121,20 @@ const CollectionPage = () => {
   
   return (
     <section className='min-h-screen bg-[#F5F2ED]'>
-    <div className='flex flex-col lg:flex-row'>
+    <div className='flex flex-col gap-5 px-4 py-6 md:flex-row md:items-start'>
       {/* Mobile Filter Button  */}
       <button 
       onClick={toggleSidebar}
-      className='flex items-center justify-center border-b border-gray-200 bg-[#F0EDE7] p-3 text-xs font-semibold uppercase tracking-widest lg:hidden'>
+      className='flex items-center justify-center border-b border-gray-200 bg-[#F0EDE7] p-3 text-xs font-semibold uppercase tracking-widest md:hidden'>
         <FaFilter className='mr-2 '/>
       </button>
 
       {/* Filter Sidebar  */}
       <div ref={sidebarRef}
-      className={`${isSidebarOpen  ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 z-50 left-0 w-64 border-r border-gray-200 bg-[#F5F2ED] overflow-y-auto transition-transform duration-300 lg:static lg:w-64 lg:shrink-0 lg:translate-x-0`}>
+      className={`${isSidebarOpen  ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-50 w-64 overflow-y-auto border-r border-gray-200 bg-white transition-transform duration-300 md:static md:inset-y-auto md:left-auto md:z-auto md:w-64 md:shrink-0 md:translate-x-0 md:self-start md:rounded-md md:border md:border-[#EAE6DF] md:shadow-[0_2px_12px_rgba(23,23,20,0.04)]`}>
         <FilterSidebar collection={collection} />
       </div>
-      <div className='min-w-0 flex-1 p-4 sm:p-8'>
+      <div className='min-w-0 flex-1 p-0 sm:p-0'>
         <div className='mb-6'>
           <div>
             <p className='luxury-eyebrow mb-2 text-gray-500'>The MegaKart edit</p>

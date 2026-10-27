@@ -8,6 +8,8 @@ const FilterSidebar = ({ collection }) => {
   const [categoryCounts, setCategoryCounts] = useState(null);
   const [categoryCountsError, setCategoryCountsError] = useState(false);
   const searchParamsKey = searchParams.toString();
+  const appliedMinPrice = searchParams.get('minPrice');
+  const appliedMaxPrice = searchParams.get('maxPrice');
   const [filters, setFilters] = useState({
     category: '',
     gender: '',
@@ -73,11 +75,14 @@ const FilterSidebar = ({ collection }) => {
       minPrice: params.minPrice || '',
       maxPrice: params.maxPrice || '',
     });
-    setPriceRange([
-      Number(params.minPrice) || 0,
-      Number(params.maxPrice) || 100,
-    ]);
   }, [searchParams]);
+
+  useEffect(() => {
+    setPriceRange([
+      Number(appliedMinPrice) || 0,
+      Number(appliedMaxPrice) || 100,
+    ]);
+  }, [appliedMinPrice, appliedMaxPrice]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -187,10 +192,13 @@ const handlePriceChange = (bound, event) => {
   }
 
   setPriceRange(nextRange);
+};
+
+const applyPriceRange = () => {
   const newFilters = {
     ...filters,
-    minPrice: nextRange[0] > 0 ? String(nextRange[0]) : '',
-    maxPrice: nextRange[1] < 100 ? String(nextRange[1]) : '',
+    minPrice: priceRange[0] > 0 ? String(priceRange[0]) : '',
+    maxPrice: priceRange[1] < 100 ? String(priceRange[1]) : '',
   };
   setFilters(newFilters);
   updateURLParams(newFilters);
@@ -230,8 +238,8 @@ const activeFilterCount = (() => {
 })();
 
 return (
-    <div className='p-4'>
-      <div className='mb-5 flex items-center justify-between border-b border-[#EAE6DF] pb-4'>
+    <div className='min-w-0 bg-white p-5'>
+      <div className='-mx-5 mb-5 flex items-center justify-between border-b border-[#EAE6DF] bg-[#FAF8F5] px-5 py-4'>
         <div className='flex items-center gap-2.5'>
           <h3 className='font-display text-2xl text-[#171714]'>Filters</h3>
           {activeFilterCount > 0 && (
@@ -252,7 +260,7 @@ return (
       </div>
 
       {/* Category Filter  */}
-      <div className='mb-5 border-b border-[#EAE6DF] pb-5'>
+      <div className='-mx-5 mb-5 border-b border-[#EAE6DF] px-5 pb-5'>
         <div className='mb-3 flex items-center justify-between'>
           <label className='text-sm font-medium uppercase tracking-[0.08em] text-[#171714]'>Category</label>
           {categoryCounts ? (
@@ -289,7 +297,7 @@ return (
       </div>
 
       {/* Color Filter  */}
-      <div className='mb-5 border-b border-[#EAE6DF] pb-5'>
+      <div className='-mx-5 mb-5 border-b border-[#EAE6DF] px-5 pb-5'>
         <div className='mb-3 flex items-center justify-between'>
           <h4 className='text-sm font-medium uppercase tracking-[0.08em] text-[#171714]'>Atelier Palette</h4>
           <span className='text-sm text-[#77746D]'>{colors.length} shades</span>
@@ -327,7 +335,7 @@ return (
       </div>
 
       {/* Size Filter  */}
-      <div className='mb-5 border-b border-[#EAE6DF] pb-5'>
+      <div className='-mx-5 mb-5 border-b border-[#EAE6DF] px-5 pb-5'>
         <label className='mb-3 block text-sm font-medium uppercase tracking-[0.08em] text-[#171714]'>Size Range</label>
         <div className='grid w-full grid-cols-3 gap-2'>
           {sizes.map((size) => {
@@ -357,7 +365,7 @@ return (
       </div>
 
       {/* Material Filter  */}
-      <div className='mb-5 border-b border-[#EAE6DF] pb-5'>
+      <div className='-mx-5 mb-5 border-b border-[#EAE6DF] px-5 pb-5'>
         <h4 className='mb-3 text-sm font-medium uppercase tracking-[0.08em] text-[#171714]'>
           Material
         </h4>
@@ -381,7 +389,7 @@ return (
         </div>
       </div>
 
-      <div className='mb-5 border-b border-[#EAE6DF] pb-5'>
+      <div className='-mx-5 mb-5 border-b border-[#EAE6DF] px-5 pb-5'>
         <h4 className='mb-3 text-sm font-medium uppercase tracking-[0.08em] text-[#171714]'>
           Collections
         </h4>
@@ -412,7 +420,7 @@ return (
       </div>
 
       {/* Brand Filter  */}
-      <div className='mb-5 border-b border-[#EAE6DF] pb-5'>
+      <div className='-mx-5 mb-5 border-b border-[#EAE6DF] px-5 pb-5'>
         <h4 className='mb-3 text-sm font-medium uppercase tracking-[0.08em] text-[#171714]'>
           Brand
         </h4>
@@ -470,6 +478,17 @@ return (
           onChange={(event) => handlePriceChange('max', event)}
           className='h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[#D8D2C8] accent-[#414B36]'
         />
+        <button
+          type='button'
+          onClick={applyPriceRange}
+          disabled={
+            priceRange[0] === (Number(filters.minPrice) || 0) &&
+            priceRange[1] === (Number(filters.maxPrice) || 100)
+          }
+          className='mt-5 w-full rounded-md bg-[#414B36] px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-[#30392A] disabled:cursor-not-allowed disabled:bg-[#D8D2C8] disabled:text-[#77746D]'
+        >
+          Apply Price
+        </button>
       </div>
 
     </div>

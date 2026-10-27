@@ -85,7 +85,7 @@ const NewArrivals = () => {
   return (
     <section id="new-arrivals" className='px-4 py-16 lg:px-0 lg:py-20'>
       <div className='container relative mx-auto mb-10 text-center'>
-        <p className='luxury-eyebrow mb-2 text-[#77746D]'>Fresh from the atelier</p>
+        <p className='luxury-eyebrow mb-2 text-[#A94F38]'>Fresh from the atelier</p>
         <h2 className='mb-4 text-4xl sm:text-5xl'>
           Explore New Arrivals
         </h2>
