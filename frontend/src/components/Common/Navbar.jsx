@@ -70,7 +70,7 @@ const Navbar = () => {
             ))}
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-5">
+          <div className="flex items-center gap-1 sm:gap-3 lg:gap-5">
             <div className="hidden lg:block">
               <SearchBar />
             </div>
@@ -101,7 +101,7 @@ const Navbar = () => {
               type="button"
               onClick={() => setDrawerOpen(true)}
               aria-label={`Open shopping bag${cartItemCount ? `, ${cartItemCount} items` : ""}`}
-              className="relative text-[#171714] transition-colors hover:text-[#77746D]"
+              className="relative flex h-9 w-9 items-center justify-center text-[#171714] transition-colors hover:text-[#77746D]"
             >
               <HiOutlineShoppingBag className="h-[22px] w-[22px]" />
               {cartItemCount > 0 && (
@@ -118,7 +118,7 @@ const Navbar = () => {
               aria-label="Open navigation menu"
               aria-expanded={navDrawerOpen}
               onClick={() => setNavDrawerOpen(true)}
-              className="text-[#171714] lg:hidden"
+              className="flex h-9 w-9 items-center justify-center text-[#171714] lg:hidden"
             >
               <HiBars3BottomRight className="h-6 w-6" />
             </button>
