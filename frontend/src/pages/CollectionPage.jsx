@@ -99,8 +99,8 @@ const CollectionPage = () => {
     setSearchParams(nextParams);
   };
 
-  const toggleSidebar =()=>{
-    setIsSidebarOpen(!isSidebarOpen);
+  const toggleSidebar = () => {
+    setIsSidebarOpen((isOpen) => !isOpen);
   };
 
   const handleCliclOutside=(e)=>{
@@ -121,17 +121,21 @@ const CollectionPage = () => {
   
   return (
     <section className='min-h-screen bg-[#F5F2ED]'>
-    <div className='flex flex-col gap-5 px-4 py-6 md:flex-row md:items-start'>
-      {/* Mobile Filter Button  */}
-      <button 
-      onClick={toggleSidebar}
-      className='flex items-center justify-center border-b border-gray-200 bg-[#F0EDE7] p-3 text-xs font-semibold uppercase tracking-widest md:hidden'>
-        <FaFilter className='mr-2 '/>
-      </button>
+    <div className='flex flex-col gap-5 px-4 py-6 lg:flex-row lg:items-start'>
 
       {/* Filter Sidebar  */}
-      <div ref={sidebarRef}
-      className={`${isSidebarOpen  ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-50 w-64 overflow-y-auto border-r border-gray-200 bg-white transition-transform duration-300 md:static md:inset-y-auto md:left-auto md:z-auto md:w-64 md:shrink-0 md:translate-x-0 md:self-start md:rounded-md md:border md:border-[#EAE6DF] md:shadow-[0_2px_12px_rgba(23,23,20,0.04)]`}>
+      {isSidebarOpen && (
+        <button
+          type='button'
+          aria-label='Close filters'
+          onClick={() => setIsSidebarOpen(false)}
+          className='fixed inset-0 z-40 bg-black/30 lg:hidden'
+        />
+      )}
+      <div
+        id='collection-filters'
+        ref={sidebarRef}
+        className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] overflow-y-auto border-r border-gray-200 bg-white transition-transform duration-300 lg:static lg:inset-y-auto lg:left-auto lg:z-auto lg:w-64 lg:max-w-none lg:shrink-0 lg:translate-x-0 lg:self-start lg:rounded-md lg:border lg:border-[#EAE6DF] lg:shadow-[0_2px_12px_rgba(23,23,20,0.04)]`}>
         <FilterSidebar collection={collection} />
       </div>
       <div className='min-w-0 flex-1 p-0 sm:p-0'>
@@ -173,7 +177,7 @@ const CollectionPage = () => {
               <span className='text-xs text-[#77746D]'>No filters applied</span>
             )}
           </div>
-          <div className='flex flex-wrap items-center justify-between gap-x-5 gap-y-3 xl:justify-end'>
+          <div className='flex flex-wrap items-center justify-between gap-3 xl:justify-end'>
             <p className='text-xs text-[#77746D]' aria-live='polite'>
               {loading
                 ? 'Updating products...'
@@ -183,7 +187,19 @@ const CollectionPage = () => {
                     ? `${products.length} items`
                     : `Showing ${products.length} of ${totalProducts} items`}
             </p>
-            <SortOptions/>
+            <div className='flex items-center gap-2'>
+              <button
+                type='button'
+                onClick={toggleSidebar}
+                aria-expanded={isSidebarOpen}
+                aria-controls='collection-filters'
+                className='inline-flex items-center gap-2 rounded-md border border-[#EAE6DF] bg-white px-3 py-2 text-xs font-medium text-[#171714] lg:hidden'
+              >
+                <FaFilter aria-hidden='true' />
+                Filters
+              </button>
+              <SortOptions/>
+            </div>
           </div>
         </div>
 

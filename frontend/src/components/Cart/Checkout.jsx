@@ -14,6 +14,7 @@ const Checkout = () => {
   const [checkoutId, setCheckoutId] = useState(null);
   const [checkoutTotal, setCheckoutTotal] = useState(null);
   const [checkoutError, setCheckoutError] = useState("");
+  const [paymentSucceeded, setPaymentSucceeded] = useState(false);
   const [shippingAddress, setShippingAddress] = useState({
     firstName: "",
     lastName: "",
@@ -56,7 +57,7 @@ const Checkout = () => {
   };
 
   const handlePaymentSuccess = async (details) => {
-    // console.log("payment ", details);
+    setPaymentSucceeded(true);
     try {
       await axios.put(
         `${import.meta.env.VITE_BACKEND_URL}/api/checkout/${checkoutId}/pay`,
@@ -71,6 +72,11 @@ const Checkout = () => {
       await handleFinalizeCheckout(checkoutId); // Finalize checkout if payment is success
     } catch (error) {
       console.error(error);
+      setCheckoutError(
+        error.response?.data?.message
+          ? `Payment succeeded, but the order could not be completed: ${error.response.data.message} Please contact support.`
+          : "Payment succeeded, but the order could not be confirmed. Please contact support."
+      );
     }
   };
 
@@ -90,6 +96,11 @@ const Checkout = () => {
       navigate("/order-confirmation");
     } catch (error) {
       console.error(error);
+      setCheckoutError(
+        error.response?.data?.message
+          ? `Payment succeeded, but the order could not be completed: ${error.response.data.message} Please contact support.`
+          : "Payment succeeded, but the order could not be confirmed. Please contact support."
+      );
     }
   };
 
@@ -243,12 +254,19 @@ const Checkout = () => {
             ) : (
               <div>
                 <h3 className="text-lg mb-4">Pay with PayPal</h3>
-                {/* PayPal component  */}
-                <PayPalButton
-                  amount={checkoutTotal}
-                  onSuccess={handlePaymentSuccess}
-                  onError={() => alert("Payment failed. Try again.")}
-                />
+                {paymentSucceeded ? (
+                  <p className="text-sm text-gray-600" aria-live="polite">
+                    {checkoutError
+                      ? "Your payment was received. Please contact support to resolve this order."
+                      : "Payment received. Confirming your order..."}
+                  </p>
+                ) : (
+                  <PayPalButton
+                    amount={checkoutTotal}
+                    onSuccess={handlePaymentSuccess}
+                    onError={() => alert("Payment failed. Try again.")}
+                  />
+                )}
               </div>
             )}
           </div>

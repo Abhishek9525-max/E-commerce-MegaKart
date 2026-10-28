@@ -323,7 +323,7 @@ return (
         {colorsError ? (
           <p role='alert' className='text-xs text-[#A94F38]'>Unable to load color options.</p>
         ) : (
-        <div className='grid grid-cols-4 gap-x-2 gap-y-3'>
+        <div className='grid max-h-36 auto-rows-[4.25rem] grid-cols-4 gap-x-2 gap-y-2 overflow-y-auto pr-1'>
           {availableColors.map((name) => (
             <button
               key={name}
@@ -331,7 +331,8 @@ return (
               onClick={() => handleColorSelect(name)}
               aria-label={`Filter by ${name}`}
               aria-pressed={filters.color.includes(name)}
-              className='group flex flex-col items-center gap-1.5'
+              title={name}
+              className='group flex h-[4.25rem] min-w-0 flex-col items-center gap-1.5'
             >
               <span className={`flex h-10 w-10 items-center justify-center rounded-full border bg-white p-[3px] transition ${
                 filters.color.includes(name)
@@ -343,7 +344,7 @@ return (
                   style={{ background: getColorSwatchValue(name) }}
                 />
               </span>
-              <span className={`text-xs ${
+              <span className={`w-full truncate text-center text-xs ${
                 filters.color.includes(name)
                   ? 'font-medium text-[#171714]'
                   : 'text-[#77746D]'

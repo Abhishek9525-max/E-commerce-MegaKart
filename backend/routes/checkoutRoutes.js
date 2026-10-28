@@ -50,6 +50,24 @@ router.post("/", protect, async (req, res) => {
       });
     }
 
+    const requestedQuantities = new Map();
+    checkoutItems.forEach((item) => {
+      const productId = item.productId.toString();
+      requestedQuantities.set(
+        productId,
+        (requestedQuantities.get(productId) || 0) + Number(item.quantity)
+      );
+    });
+
+    for (const [productId, quantity] of requestedQuantities) {
+      const product = productsById.get(productId);
+      if (product.countInStock < quantity) {
+        return res.status(409).json({
+          message: `Only ${product.countInStock} item(s) of ${product.name} are currently available.`,
+        });
+      }
+    }
+
     const pricedCheckoutItems = checkoutItems.map((item) => {
       const product = productsById.get(item.productId.toString());
       const regularPrice = Number(product.price) || 0;
@@ -102,13 +120,19 @@ router.put("/:id/pay", protect, async (req, res) => {
   const { paymentStatus, paymentDetails } = req.body;
 
   try {
-    const checkout = await Checkout.findById(req.params.id);
+    const checkout = await Checkout.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    });
 
     if (!checkout) {
       return res.status(404).json({ message: "Checkout not found " });
     }
 
     if (paymentStatus === "paid") {
+      if (checkout.isFinalized) {
+        return res.status(409).json({ message: "Checkout already finalized" });
+      }
       checkout.isPaid = true;
       checkout.paymentStatus = paymentStatus;
       checkout.paymentDetails = paymentDetails;
@@ -129,44 +153,105 @@ router.put("/:id/pay", protect, async (req, res) => {
 // @desc Finalize checkout and convert to an order after payment confirmation
 // @access Private
 router.post("/:id/finalize", protect, async (req, res) => {
+  let session;
   try {
-    const checkout = await Checkout.findById(req.params.id);
+    session = await mongoose.startSession();
+    let finalOrder;
 
-    if (!checkout) {
-      return res.status(404).json({ message: " Checkout not found" });
-    }
+    await session.withTransaction(async () => {
+      const checkout = await Checkout.findOne({
+        _id: req.params.id,
+        user: req.user._id,
+      }).session(session);
 
-    if (checkout.isPaid && !checkout.isFinalized) {
-      // Create final order based on the checkout details
-      const finalOrder = await Order.create({
-        user: checkout.user,
-        orderItems: checkout.checkoutItems,
-        shippingAddress: checkout.shippingAddress,
-        paymentMethod: checkout.paymentMethod,
-        totalPrice: checkout.totalPrice,
-        isPaid: true,
-        paidAt: checkout.paidAt,
-        isDelivered: false,
-        paymentStatus: "paid",
-        paymentDetails: checkout.paymentDetails,
+      if (!checkout) {
+        const error = new Error("Checkout not found.");
+        error.statusCode = 404;
+        throw error;
+      }
+      if (checkout.isFinalized) {
+        const error = new Error("Checkout already finalized.");
+        error.statusCode = 409;
+        throw error;
+      }
+      if (!checkout.isPaid) {
+        const error = new Error("Checkout is not paid.");
+        error.statusCode = 400;
+        throw error;
+      }
+
+      const requestedQuantities = new Map();
+      checkout.checkoutItems.forEach((item) => {
+        const productId = item.productId.toString();
+        requestedQuantities.set(
+          productId,
+          (requestedQuantities.get(productId) || 0) + item.quantity
+        );
       });
 
-      // Mark the checkout as finalized
-      checkout.isFinalized = true;
-      checkout.finalizedAt = Date.now();
-      await checkout.save();
+      for (const [productId, quantity] of requestedQuantities) {
+        const stockUpdate = await Product.updateOne(
+          { _id: productId, countInStock: { $gte: quantity } },
+          { $inc: { countInStock: -quantity } },
+          { session }
+        );
 
-      // Delete the cart associated with the user
-      await Cart.findOneAndDelete({ user: checkout.user });
-      res.status(201).json(finalOrder);
-    } else if (checkout.isFinalized) {
-      res.status(400).json({ message: "Checkout already finalized" });
-    } else {
-      res.status(400).json({ message: "Checkout is not paid" });
-    }
+        if (stockUpdate.matchedCount !== 1) {
+          const product = await Product.findById(productId)
+            .select("name countInStock")
+            .session(session);
+          const available = product?.countInStock ?? 0;
+          const name = product?.name || "A product";
+          const error = new Error(
+            `${name} has only ${available} item(s) available; the order requires ${quantity}.`
+          );
+          error.code = "INSUFFICIENT_STOCK";
+          throw error;
+        }
+      }
+
+      [finalOrder] = await Order.create(
+        [{
+          user: checkout.user,
+          orderItems: checkout.checkoutItems,
+          shippingAddress: checkout.shippingAddress,
+          paymentMethod: checkout.paymentMethod,
+          totalPrice: checkout.totalPrice,
+          isPaid: true,
+          paidAt: checkout.paidAt,
+          isDelivered: false,
+          paymentStatus: "paid",
+          paymentDetails: checkout.paymentDetails,
+        }],
+        { session }
+      );
+
+      const checkoutUpdate = await Checkout.updateOne(
+        { _id: checkout._id, isFinalized: false },
+        { $set: { isFinalized: true, finalizedAt: new Date() } },
+        { session }
+      );
+      if (checkoutUpdate.matchedCount !== 1) {
+        const error = new Error("Checkout already finalized.");
+        error.statusCode = 409;
+        throw error;
+      }
+
+      await Cart.deleteOne({ user: checkout.user }, { session });
+    });
+
+    res.status(201).json(finalOrder);
   } catch (error) {
+    if (error.code === "INSUFFICIENT_STOCK") {
+      return res.status(409).json({ message: error.message });
+    }
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
     console.error(error);
     res.status(500).json({ message: "Server Error" });
+  } finally {
+    if (session) await session.endSession();
   }
 });
 
