@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import UserLayout from "./components/Layout/UserLayout";
 import Home from "./pages/Home";
 import NewArrivalsPage from "./pages/NewArrivalsPage";
+import FavoritesPage from "./pages/FavoritesPage";
 import { Toaster } from "sonner";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -55,6 +56,8 @@ function App() {
         <Toaster
           position="top-right"
           theme="light"
+          duration={1800}
+          visibleToasts={3}
           icons={{
             success: notificationIcon(FiCheck, "#414B36"),
             error: notificationIcon(FiX, "#A94F38"),
@@ -77,6 +80,7 @@ function App() {
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="favorites" element={<FavoritesPage />} />
             <Route path="collection/:collection" element={<CollectionPage />} />
             <Route path="product/:id" element={<ProductDetails />} />
             <Route path="checkout" element={<Checkout />} />

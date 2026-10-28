@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   HiOutlineUser,
   HiOutlineShoppingBag,
@@ -8,7 +8,8 @@ import {
 import SearchBar from "./SearchBar";
 import CartDrawer from "../Layout/CartDrawer";
 import { IoMdClose } from "react-icons/io";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchFavorites } from "../../redux/slices/favoriteSlice";
 
 const navigationItems = [
   { label: "Home", to: "/" },
@@ -21,13 +22,23 @@ const navigationItems = [
 const Navbar = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [navDrawerOpen, setNavDrawerOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { cart } = useSelector((state) => state.cart);
   const { user } = useSelector((state) => state.auth);
+  const { products: favoriteProducts, status: favoritesStatus, error: favoritesError } =
+    useSelector((state) => state.favorites);
   const { pathname, search } = useLocation();
   const cartItemCount =
     cart?.products?.reduce((total, product) => total + product.quantity, 0) || 0;
   const gender = new URLSearchParams(search).get("gender")?.toLowerCase();
   const isCollectionRoute = pathname.startsWith("/collection/");
+
+  useEffect(() => {
+    if (user?._id) dispatch(fetchFavorites(user._id));
+    setProfileMenuOpen(false);
+  }, [dispatch, user?._id]);
 
   const isNavigationItemActive = (label) => {
     if (label === "Home") return pathname === "/";
@@ -82,21 +93,119 @@ const Navbar = () => {
                 Admin
               </Link>
             )}
-            <Link
-              to="/profile"
-              aria-label={user ? `Your account, ${user.name}` : "Your account"}
-              className="hidden text-[#171714] transition-opacity hover:opacity-75 sm:block"
+            <div
+              className="group relative hidden sm:block"
+              onMouseEnter={() => setProfileMenuOpen(true)}
+              onMouseLeave={() => setProfileMenuOpen(false)}
+              onFocus={() => setProfileMenuOpen(true)}
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget)) {
+                  setProfileMenuOpen(false);
+                }
+              }}
             >
-              {user?.profileImage ? (
-                <img
-                  src={user.profileImage}
-                  alt=""
-                  className="h-8 w-8 rounded-full border border-[#D8D2C8] object-cover"
-                />
-              ) : (
-                <HiOutlineUser className="h-[21px] w-[21px]" />
-              )}
-            </Link>
+              <button
+                type="button"
+                aria-label={user ? `Go to your profile, ${user.name}` : "Sign in"}
+                aria-expanded={profileMenuOpen}
+                aria-haspopup="true"
+                onClick={() => navigate(user ? "/profile" : "/login")}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-[#171714] transition-opacity hover:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#414B36]"
+              >
+                {user?.profileImage ? (
+                  <img
+                    src={user.profileImage}
+                    alt=""
+                    className="h-8 w-8 rounded-full border border-[#D8D2C8] object-cover"
+                  />
+                ) : (
+                  <HiOutlineUser className="h-[21px] w-[21px]" />
+                )}
+              </button>
+              <div
+                className={`absolute right-0 top-full z-50 w-80 origin-top-right pt-3 transition duration-150 ${
+                  profileMenuOpen
+                    ? "visible translate-y-0 opacity-100"
+                    : "invisible -translate-y-1 opacity-0"
+                }`}
+              >
+                <div className="overflow-hidden rounded-md border border-[#EAE6DF] bg-white shadow-[0_12px_36px_rgba(23,23,20,0.16)]">
+                  <div className="border-b border-[#EAE6DF] bg-[#FAF8F5] px-4 py-3">
+                    <p className="luxury-eyebrow text-[#77746D]">
+                      {user ? `Hello, ${user.name}` : "Your account"}
+                    </p>
+                    <Link
+                      to={user ? "/profile" : "/login"}
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="mt-1 inline-block text-xs font-semibold uppercase tracking-wide text-[#414B36] hover:text-[#A94F38]"
+                    >
+                      {user ? "My Account" : "Sign in"}
+                    </Link>
+                  </div>
+                  <div className="px-4 py-3">
+                    <div className="mb-3 flex items-center justify-between">
+                      <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#171714]">
+                        Favorite pieces
+                      </p>
+                      <Link
+                        to={user ? "/favorites" : "/login"}
+                        onClick={() => setProfileMenuOpen(false)}
+                        className="text-[10px] font-semibold uppercase tracking-wide text-[#A94F38] hover:underline"
+                      >
+                        View all{favoriteProducts.length > 0 ? ` (${favoriteProducts.length})` : ""}
+                      </Link>
+                    </div>
+                    {!user ? (
+                      <p className="text-xs leading-relaxed text-[#77746D]">
+                        Sign in to view and save your favorite products.
+                      </p>
+                    ) : favoritesStatus === "loading" ? (
+                      <p className="text-xs text-[#77746D]" aria-live="polite">
+                        Loading favorites...
+                      </p>
+                    ) : favoritesStatus === "failed" ? (
+                      <p role="alert" className="text-xs text-[#A94F38]">
+                        {favoritesError || "Unable to load favorites."}
+                      </p>
+                    ) : favoriteProducts.length > 0 ? (
+                      <ul className="max-h-64 space-y-3 overflow-y-auto">
+                        {favoriteProducts.slice(0, 4).map((product) => (
+                          <li key={product._id}>
+                            <Link
+                              to={`/product/${product._id}`}
+                              onClick={() => setProfileMenuOpen(false)}
+                              className="flex items-center gap-3"
+                            >
+                              {product.images?.[0]?.url ? (
+                                <img
+                                  src={product.images[0].url}
+                                  alt=""
+                                  className="h-14 w-11 shrink-0 bg-[#F0EDE7] object-cover"
+                                />
+                              ) : (
+                                <span className="flex h-14 w-11 shrink-0 items-center justify-center bg-[#F0EDE7]">
+                                  <HiOutlineUser
+                                    aria-hidden="true"
+                                    className="h-5 w-5 text-[#77746D]"
+                                  />
+                                </span>
+                              )}
+                              <span className="line-clamp-2 text-xs text-[#33342E] hover:text-[#A94F38]">
+                                {product.name}
+                              </span>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs leading-relaxed text-[#77746D]">
+                        No favorites saved yet. Tap the heart on a product to add it here.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
@@ -174,6 +283,13 @@ const Navbar = () => {
               className="block border-b border-[#D8D2C8] py-4 text-xs font-medium uppercase tracking-[0.12em] text-[#33342E]"
             >
               My Account
+            </Link>
+            <Link
+              to="/favorites"
+              onClick={closeNavDrawer}
+              className="block border-b border-[#D8D2C8] py-4 text-xs font-medium uppercase tracking-[0.12em] text-[#33342E]"
+            >
+              My Favorites
             </Link>
           </nav>
         </aside>

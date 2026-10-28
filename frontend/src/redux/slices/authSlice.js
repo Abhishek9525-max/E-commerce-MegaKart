@@ -2,7 +2,8 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 //Retrieve user info and token from localStorage if available
-const userFromStorage = localStorage.getItem("userInfo")
+const tokenFromStorage = localStorage.getItem("userToken");
+const userFromStorage = tokenFromStorage && localStorage.getItem("userInfo")
   ? JSON.parse(localStorage.getItem("userInfo"))
   : null;
 
@@ -14,6 +15,7 @@ localStorage.setItem("guestId", initialGuestId);
 // Initial state
 const initialState = {
   user: userFromStorage,
+  token: tokenFromStorage,
   guestId: initialGuestId,
   loading: false,
   error: null,
@@ -31,7 +33,10 @@ export const loginUser = createAsyncThunk(
       localStorage.setItem("userInfo", JSON.stringify(response.data.user));
       localStorage.setItem("userToken", response.data.token);
 
-      return response.data.user; // Return the user object from the response
+      return {
+        user: response.data.user,
+        token: response.data.token,
+      };
     } catch (error) {
       return rejectWithValue({
         message: error.response?.data?.message || "Unable to sign in. Please try again.",
@@ -52,7 +57,10 @@ export const registerUser = createAsyncThunk(
       localStorage.setItem("userInfo", JSON.stringify(response.data.user));
       localStorage.setItem("userToken", response.data.token);
 
-      return response.data.user; // Return the user object from the response
+      return {
+        user: response.data.user,
+        token: response.data.token,
+      };
     } catch (error) {
       return rejectWithValue({
         message: error.response?.data?.message || "Unable to create your account. Please try again.",
@@ -117,6 +125,7 @@ const authSlice = createSlice({
   reducers: {
     logout: (state) => {
       state.user = null;
+      state.token = null;
       state.guestId = `guest_${new Date().getTime()}`; // Reset guest ID on logout
       localStorage.removeItem("userInfo");
       localStorage.removeItem("userToken");
@@ -135,7 +144,8 @@ const authSlice = createSlice({
       }) 
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
@@ -147,7 +157,8 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;

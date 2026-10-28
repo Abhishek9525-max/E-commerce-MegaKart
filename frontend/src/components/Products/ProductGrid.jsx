@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { getProductPricing } from "../../utils/productPricing";
+import FavoriteButton from "./FavoriteButton";
 
 const ProductGrid = ({ products, loading, error }) => {
   if (loading) {
@@ -15,13 +16,16 @@ const ProductGrid = ({ products, loading, error }) => {
       {products.map((product) => {
         const pricing = getProductPricing(product);
         return (
-          <Link
+          <article
             key={product._id}
-            to={`/product/${product._id}`}
-            className="group block min-w-0"
+            className="group relative h-full min-w-0 bg-white p-3 transition-shadow duration-300 hover:shadow-[0_12px_32px_rgba(23,23,20,0.08)] sm:p-4"
           >
-            <article className="h-full min-w-0 bg-white p-3 transition-shadow duration-300 hover:shadow-[0_12px_32px_rgba(23,23,20,0.08)] sm:p-4">
               <div className="relative mb-4 aspect-[3/4] w-full overflow-hidden bg-[#F0EDE7]">
+                <Link
+                  to={`/product/${product._id}`}
+                  aria-label={`View ${product.name}`}
+                  className="block h-full w-full"
+                >
                 {product.images?.[0]?.url && (
                   <img
                     src={product.images[0].url}
@@ -29,27 +33,33 @@ const ProductGrid = ({ products, loading, error }) => {
                     className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                   />
                 )}
+                </Link>
+                <FavoriteButton
+                  product={product}
+                  className="absolute right-2 top-2"
+                />
                 {pricing.hasDiscount && (
                   <span className="absolute left-3 top-3 bg-[#A94F38] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
                     {pricing.discountPercent}% off
                   </span>
                 )}
               </div>
-              <h3 className="mb-2 line-clamp-2 min-h-10 font-sans text-sm font-medium text-[#171714]">
-                {product.name}
-              </h3>
-              <p className="flex flex-wrap items-baseline gap-2 font-sans text-sm font-medium tracking-wide text-[#77746D]">
-                <span className={pricing.hasDiscount ? "text-[#A94F38]" : ""}>
-                  ${pricing.price.toFixed(2)}
-                </span>
-                {pricing.originalPrice && (
-                  <span className="text-xs font-normal text-[#99958c] line-through">
-                    ${pricing.originalPrice.toFixed(2)}
+              <Link to={`/product/${product._id}`} className="block">
+                <h3 className="mb-2 line-clamp-2 min-h-10 font-sans text-sm font-medium text-[#171714]">
+                  {product.name}
+                </h3>
+                <p className="flex flex-wrap items-baseline gap-2 font-sans text-sm font-medium tracking-wide text-[#77746D]">
+                  <span className={pricing.hasDiscount ? "text-[#A94F38]" : ""}>
+                    ${pricing.price.toFixed(2)}
                   </span>
-                )}
-              </p>
-            </article>
-          </Link>
+                  {pricing.originalPrice && (
+                    <span className="text-xs font-normal text-[#99958c] line-through">
+                      ${pricing.originalPrice.toFixed(2)}
+                    </span>
+                  )}
+                </p>
+              </Link>
+          </article>
         );
       })}
     </div>

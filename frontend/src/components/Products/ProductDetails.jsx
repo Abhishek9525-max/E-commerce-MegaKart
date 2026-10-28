@@ -11,6 +11,7 @@ import {
 import { addToCart } from "../../redux/slices/cartSlice";
 import { getProductPricing } from "../../utils/productPricing";
 import { getColorSwatchValue } from "../../utils/colorSwatches";
+import FavoriteButton from "./FavoriteButton";
 
 const ProductDetails = ({ productId, showSimilarProducts = true }) => {
   const { id } = useParams();
@@ -195,9 +196,15 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
                   .join(" · ")}
               </p>
             )}
-            <h1 className="text-3xl leading-tight text-[#171714] sm:text-4xl">
-              {selectedProduct.name}
-            </h1>
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="text-3xl leading-tight text-[#171714] sm:text-4xl">
+                {selectedProduct.name}
+              </h1>
+              <FavoriteButton
+                product={selectedProduct}
+                className="shrink-0 border border-[#EAE6DF]"
+              />
+            </div>
 
             <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span className="text-xl font-semibold text-[#171714]">

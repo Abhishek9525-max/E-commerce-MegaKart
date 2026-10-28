@@ -13,6 +13,7 @@ const adminRoutes = require("./routes/adminRoutes");
 const productAdminRoutes = require("./routes/productAdminRoutes");
 const adminOrderRoutes = require("./routes/adminOrderRoutes");
 const adminAnalyticsRoutes = require("./routes/adminAnalyticsRoutes");
+const favoriteRoutes = require("./routes/favoriteRoutes");
 
 const app = express();
 app.use(express.json());
@@ -35,6 +36,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/favorites", favoriteRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api", subscribeRoutes);
 

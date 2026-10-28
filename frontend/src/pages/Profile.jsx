@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { FiCamera, FiLogOut, FiMail, FiShield, FiTrash2 } from 'react-icons/fi'
+import { HiHeart } from 'react-icons/hi2'
+import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom';
 import { deleteProfileImage, logout, uploadProfileImage } from '../redux/slices/authSlice';
@@ -148,6 +150,13 @@ const Profile = () => {
                 <FiShield aria-hidden='true' className='h-4 w-4 text-[#414B36]' />
                 Your account is private and secure
               </div>
+              <Link
+                to='/favorites'
+                className='mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 border border-[#D8D2C8] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-[#414B36] transition-colors hover:border-[#414B36] hover:bg-[#F5F2ED]'
+              >
+                <HiHeart aria-hidden='true' className='h-4 w-4 text-[#A94F38]' />
+                My Favorites
+              </Link>
               <button
                 type='button'
                 onClick={handleLogout}
