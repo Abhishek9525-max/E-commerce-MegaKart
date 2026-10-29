@@ -117,10 +117,22 @@ const ProductManagement = () => {
                   key={product._id}
                   className="transition-colors hover:bg-[#fcfbf9]"
                 >
-                  <td
-                    className="whitespace-nowrap px-5 py-4 font-medium text-[#292b25] sm:px-6"
-                  >
-                    {product.name}
+                  <td className="whitespace-nowrap px-5 py-4 font-medium text-[#292b25] sm:px-6">
+                    <div className="flex items-center gap-3">
+                      {product.images?.[0]?.url ? (
+                        <img
+                          src={product.images[0].url}
+                          alt={product.images[0].altText || product.name}
+                          className="h-12 w-12 shrink-0 border border-[#e7e4dc] bg-[#f5f2ed] object-cover"
+                        />
+                      ) : (
+                        <div
+                          aria-hidden="true"
+                          className="h-12 w-12 shrink-0 border border-[#e7e4dc] bg-[#f5f2ed]"
+                        />
+                      )}
+                      <span>{product.name}</span>
+                    </div>
                   </td>
                   <td className="whitespace-nowrap px-5 py-4 text-[#55564f] sm:px-6">
                     {Number(product.discountPrice) > 0 &&
