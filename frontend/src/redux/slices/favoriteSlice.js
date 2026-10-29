@@ -2,23 +2,12 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { loginUser, logout, registerUser } from "./authSlice";
 
-const getAuthConfig = (token) => ({
-  headers: {
-    Authorization: ["Bearer", token].join(" "),
-  },
-});
-
 export const fetchFavorites = createAsyncThunk(
   "favorites/fetchFavorites",
-  async (userId, { getState, rejectWithValue }) => {
+  async (userId, { rejectWithValue }) => {
     try {
-      const token = getState().auth.token;
-      if (!token) {
-        return rejectWithValue("Please sign in again to manage favorites.");
-      }
       const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/favorites`,
-        getAuthConfig(token)
+        `${import.meta.env.VITE_BACKEND_URL}/api/favorites`
       );
       return { products: response.data, userId };
     } catch (error) {
@@ -42,16 +31,12 @@ export const fetchFavorites = createAsyncThunk(
 
 export const toggleFavorite = createAsyncThunk(
   "favorites/toggleFavorite",
-  async ({ product, isFavorite }, { getState, rejectWithValue }) => {
+  async ({ product, isFavorite }, { rejectWithValue }) => {
     try {
-      const token = getState().auth.token;
-      if (!token) {
-        return rejectWithValue("Please sign in again to manage favorites.");
-      }
       const url = `${import.meta.env.VITE_BACKEND_URL}/api/favorites/${product._id}`;
       const response = isFavorite
-        ? await axios.delete(url, getAuthConfig(token))
-        : await axios.post(url, {}, getAuthConfig(token));
+        ? await axios.delete(url)
+        : await axios.post(url, {});
       return { ...response.data, product };
     } catch (error) {
       return rejectWithValue(

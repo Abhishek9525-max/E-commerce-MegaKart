@@ -11,7 +11,7 @@ import {
 } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { logout } from "../../redux/slices/authSlice";
+import { logoutUser } from "../../redux/slices/authSlice";
 import { clearCart } from "../../redux/slices/cartSlice";
 
 const AdminSidebar = ({ onNavigate }) => {
@@ -20,7 +20,7 @@ const AdminSidebar = ({ onNavigate }) => {
   const productCount = useSelector((state) => state.adminProducts.products.length);
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logoutUser());
     dispatch(clearCart());
     navigate("/");
     onNavigate?.();

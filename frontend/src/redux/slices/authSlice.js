@@ -1,27 +1,47 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-//Retrieve user info and token from localStorage if available
-const tokenFromStorage = localStorage.getItem("userToken");
-const userFromStorage = tokenFromStorage && localStorage.getItem("userInfo")
+localStorage.removeItem("userToken");
+const userFromStorage = localStorage.getItem("userInfo")
   ? JSON.parse(localStorage.getItem("userInfo"))
   : null;
 
-// check for an existing guest ID in the localStorage or generate a new One
 const initialGuestId =
   localStorage.getItem("guestId") || `guest_${new Date().getTime()}`;
 localStorage.setItem("guestId", initialGuestId);
 
-// Initial state
 const initialState = {
   user: userFromStorage,
-  token: tokenFromStorage,
   guestId: initialGuestId,
   loading: false,
   error: null,
+  initialized: false,
+  initializing: false,
 };
 
-// Async Thunk for User Login
+export const initializeAuth = createAsyncThunk(
+  "auth/initializeAuth",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/profile`
+      );
+      localStorage.setItem("userInfo", JSON.stringify(response.data));
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Unable to restore your session."
+      );
+    }
+  },
+  {
+    condition: (_, { getState }) => {
+      const { initialized, initializing } = getState().auth;
+      return !initialized && !initializing;
+    },
+  }
+);
+
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async (userData, { rejectWithValue }) => {
@@ -31,21 +51,17 @@ export const loginUser = createAsyncThunk(
         userData
       );
       localStorage.setItem("userInfo", JSON.stringify(response.data.user));
-      localStorage.setItem("userToken", response.data.token);
-
-      return {
-        user: response.data.user,
-        token: response.data.token,
-      };
+      return response.data.user;
     } catch (error) {
       return rejectWithValue({
-        message: error.response?.data?.message || "Unable to sign in. Please try again.",
+        message:
+          error.response?.data?.message ||
+          "Unable to sign in. Please try again.",
       });
     }
   }
 );
 
-// Async Thunk for User Registration
 export const registerUser = createAsyncThunk(
   "auth/registerUser",
   async (userData, { rejectWithValue }) => {
@@ -55,15 +71,12 @@ export const registerUser = createAsyncThunk(
         userData
       );
       localStorage.setItem("userInfo", JSON.stringify(response.data.user));
-      localStorage.setItem("userToken", response.data.token);
-
-      return {
-        user: response.data.user,
-        token: response.data.token,
-      };
+      return response.data.user;
     } catch (error) {
       return rejectWithValue({
-        message: error.response?.data?.message || "Unable to create your account. Please try again.",
+        message:
+          error.response?.data?.message ||
+          "Unable to create your account. Please try again.",
       });
     }
   }
@@ -77,14 +90,8 @@ export const uploadProfileImage = createAsyncThunk(
       body.append("image", imageFile);
       const response = await axios.put(
         `${import.meta.env.VITE_BACKEND_URL}/api/users/profile/image`,
-        body,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-          },
-        }
+        body
       );
-
       localStorage.setItem("userInfo", JSON.stringify(response.data.user));
       return response.data.user;
     } catch (error) {
@@ -100,14 +107,8 @@ export const deleteProfileImage = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.delete(
-        `${import.meta.env.VITE_BACKEND_URL}/api/users/profile/image`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-          },
-        }
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/profile/image`
       );
-
       localStorage.setItem("userInfo", JSON.stringify(response.data.user));
       return response.data.user;
     } catch (error) {
@@ -118,18 +119,30 @@ export const deleteProfileImage = createAsyncThunk(
   }
 );
 
-// Slice
+export const logoutUser = createAsyncThunk(
+  "auth/logoutUser",
+  async (_, { dispatch }) => {
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/auth/logout`,
+        {}
+      );
+    } finally {
+      dispatch(logout());
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
     logout: (state) => {
       state.user = null;
-      state.token = null;
-      state.guestId = `guest_${new Date().getTime()}`; // Reset guest ID on logout
+      state.initialized = true;
+      state.guestId = `guest_${new Date().getTime()}`;
       localStorage.removeItem("userInfo");
-      localStorage.removeItem("userToken");
-      localStorage.setItem("guestId", state.guestId); // Set new guest ID in localStorage
+      localStorage.setItem("guestId", state.guestId);
     },
     generateNewGuestId: (state) => {
       state.guestId = `guest_${new Date().getTime()}`;
@@ -138,14 +151,32 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(initializeAuth.pending, (state) => {
+        state.loading = true;
+        state.initializing = true;
+        state.error = null;
+      })
+      .addCase(initializeAuth.fulfilled, (state, action) => {
+        state.loading = false;
+        state.initializing = false;
+        state.initialized = true;
+        state.user = action.payload;
+      })
+      .addCase(initializeAuth.rejected, (state) => {
+        state.loading = false;
+        state.initializing = false;
+        state.initialized = true;
+        state.user = null;
+        localStorage.removeItem("userInfo");
+      })
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
-      }) 
+      })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.initialized = true;
+        state.user = action.payload;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
@@ -157,8 +188,8 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.initialized = true;
+        state.user = action.payload;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
@@ -173,6 +204,5 @@ const authSlice = createSlice({
   },
 });
 
-
-export const {logout,generateNewGuestId} = authSlice.actions;
+export const { logout, generateNewGuestId } = authSlice.actions;
 export default authSlice.reducer;

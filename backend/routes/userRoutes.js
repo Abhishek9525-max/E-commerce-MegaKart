@@ -2,11 +2,44 @@ const express = require("express");
 require("dotenv").config();
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const {protect} = require('../middleware/authMiddleware')
+const {
+  REFRESH_COOKIE,
+  clearAuthCookies,
+  createAuthTokens,
+  hashRefreshToken,
+  refreshSecret,
+  setAuthCookies,
+} = require("../utils/authTokens");
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
 const streamifier = require("streamifier");
 const router = express.Router();
+
+const userResponse = (user) => ({
+  _id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  profileImage: user.profileImage,
+});
+
+const hashesMatch = (left, right) => {
+  const leftBuffer = Buffer.from(left || "");
+  const rightBuffer = Buffer.from(right || "");
+  return (
+    leftBuffer.length === rightBuffer.length &&
+    crypto.timingSafeEqual(leftBuffer, rightBuffer)
+  );
+};
+
+const startSession = async (user, res) => {
+  const tokens = createAuthTokens(user);
+  user.refreshTokenHash = tokens.refreshTokenHash;
+  await user.save();
+  setAuthCookies(res, tokens);
+};
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -57,31 +90,8 @@ router.post("/register", async (req, res) => {
 
     const user = new User({ name: name.trim(), email: normalizedEmail, password });
     await user.save();
-
-    //Create JWT Payload
-    const payload = { user: { id: user._id, role: user.role } };
-
-    //sign and return the token along with user data
-    // time according to you
-  
-    jwt.sign(payload, process.env.JWT_SECRET,
-      { expiresIn: "10h" },
-      (err, token) => {
-        if (err) throw err;
-
-        //Send the user and token in response
-        res.status(201).json({
-          user: {
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            profileImage: user.profileImage,
-          },
-          token,
-        });
-      }
-    );
+    await startSession(user, res);
+    res.status(201).json({ user: userResponse(user) });
   } catch (error) {
     if (error.code === 11000 && error.keyPattern?.email) {
       return res.status(400).json({ message: "An account with this email already exists." });
@@ -101,39 +111,90 @@ router.post('/login', async(req,res)=>{
 
   try{
     //find the user by email
-    let user = await User.findOne({ email: normalizedEmail })
+    const user = await User.findOne({ email: normalizedEmail })
 
     if(!user) return res.status(400).json({message: 'Invalid Credentials'});
     const isMatch = await user.matchPassword(password);
 
     if(!isMatch) return res.status(400).json({message: 'Invalid Credential'});
 
-    const payload = { user: { id: user._id, role: user.role } };
-
-    //sign and return the token along with user data
-    // time according to you
-    jwt.sign(payload, process.env.JWT_SECRET,
-      { expiresIn: "10h" },
-      (err, token) => {
-        if (err) throw err;
-
-        //Send the user and token in response
-        res.json({
-          user: {
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            profileImage: user.profileImage,
-          },
-          token,
-        })
-      })
+    await startSession(user, res);
+    res.json({ user: userResponse(user) });
   }
   catch (error){   
     console.error(error);
     res.status(500).send('Server Error');
   }
+});
+
+router.post("/auth/refresh", async (req, res) => {
+  const refreshToken = req.cookies?.[REFRESH_COOKIE];
+  if (!refreshToken) {
+    clearAuthCookies(res);
+    return res.status(401).json({ message: "Refresh session not found." });
+  }
+
+  try {
+    const decoded = jwt.verify(refreshToken, refreshSecret());
+    if (decoded.tokenType !== "refresh" || !decoded.user?.id) {
+      clearAuthCookies(res);
+      return res.status(401).json({ message: "Invalid refresh session." });
+    }
+
+    const oldHash = hashRefreshToken(refreshToken);
+    const user = await User.findById(decoded.user.id).select("+refreshTokenHash");
+
+    if (!user || !hashesMatch(user.refreshTokenHash, oldHash)) {
+      clearAuthCookies(res);
+      return res.status(401).json({ message: "Refresh session expired or revoked." });
+    }
+
+    const tokens = createAuthTokens(user);
+    const rotatedUser = await User.findOneAndUpdate(
+      { _id: user._id, refreshTokenHash: oldHash },
+      { $set: { refreshTokenHash: tokens.refreshTokenHash } },
+      { new: true }
+    ).select("-password -refreshTokenHash");
+
+    if (!rotatedUser) {
+      clearAuthCookies(res);
+      return res.status(401).json({ message: "Refresh session has already been used." });
+    }
+
+    setAuthCookies(res, tokens);
+    res.json({ user: userResponse(rotatedUser) });
+  } catch (error) {
+    if (error.name !== "JsonWebTokenError" && error.name !== "TokenExpiredError") {
+      console.error("Failed to refresh authentication session:", error);
+      return res.status(500).json({ message: "Unable to refresh authentication session." });
+    }
+    clearAuthCookies(res);
+    return res.status(401).json({ message: "Refresh session expired." });
+  }
+});
+
+router.post("/auth/logout", async (req, res) => {
+  const refreshToken = req.cookies?.[REFRESH_COOKIE];
+  if (refreshToken) {
+    try {
+      const decoded = jwt.verify(refreshToken, refreshSecret());
+      if (decoded.tokenType === "refresh" && decoded.user?.id) {
+        await User.updateOne(
+          {
+            _id: decoded.user.id,
+            refreshTokenHash: hashRefreshToken(refreshToken),
+          },
+          { $unset: { refreshTokenHash: "" } }
+        );
+      }
+    } catch (error) {
+      if (error.name !== "JsonWebTokenError" && error.name !== "TokenExpiredError") {
+        console.error("Failed to revoke authentication session:", error);
+      }
+    }
+  }
+  clearAuthCookies(res);
+  res.json({ message: "Signed out." });
 });
 
 //@route GET /api/users/profile

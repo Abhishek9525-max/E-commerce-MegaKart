@@ -1,28 +1,31 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-//Middleware to protect routes
+const ACCESS_COOKIE = "accessToken";
 
 const protect = async (req, res, next) => {
-  let token;
+  const token = req.cookies?.[ACCESS_COOKIE];
+  if (!token) {
+    return res.status(401).json({ message: "Authentication required." });
+  }
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    try {
-      token = req.headers.authorization.split(" ")[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      // console.log(decoded.user.id);
-      
-      req.user = await User.findById(decoded.user.id).select("-password"); //Exclude password
-      next();
-    } catch (error) {
-      console.error("Token verification failed", error);
-      res.status(401).json({ message: "Not authorized, token failed" });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.tokenType !== "access" || !decoded.user?.id) {
+      return res.status(401).json({ message: "Invalid authentication session." });
     }
-  } else {
-    res.status(401).json({ message: "Not authorized, no token provided" });
+
+    req.user = await User.findById(decoded.user.id).select("-password");
+    if (!req.user) {
+      return res.status(401).json({ message: "User account no longer exists." });
+    }
+    return next();
+  } catch (error) {
+    if (error.name !== "JsonWebTokenError" && error.name !== "TokenExpiredError") {
+      console.error("Authentication check failed:", error);
+      return res.status(500).json({ message: "Unable to verify authentication." });
+    }
+    return res.status(401).json({ message: "Authentication session expired." });
   }
 };
 

@@ -22,6 +22,18 @@ A full-stack e-commerce web application built using the **MERN Stack (MongoDB, E
 **Database:** MongoDB  
 **Version Control:** Git, GitHub  
 
+## Authentication configuration
+
+Authentication uses short-lived access cookies and rotating refresh cookies. Both are HttpOnly; the frontend must send requests with credentials enabled. In production, configure:
+
+- `JWT_SECRET`: a strong secret used to sign access tokens.
+- `REFRESH_TOKEN_SECRET`: a separate strong secret used to sign refresh tokens.
+- `FRONTEND_URL` (or comma-separated `CORS_ORIGINS`): exact frontend origin(s), including scheme.
+- `COOKIE_SAME_SITE=none` and `COOKIE_SECURE=true` when the frontend and API are on different sites. For same-site deployments, `lax` may be used.
+- `COOKIE_DOMAIN` only when cookies need to be shared across subdomains.
+
+Local development allows `http://localhost:5173` and `http://127.0.0.1:5173` by default. The frontend `VITE_BACKEND_URL` must point to the API origin. After switching from bearer tokens, users must sign in again to establish cookie sessions.
+
 ---
 
 ## 📂 Project Structure  

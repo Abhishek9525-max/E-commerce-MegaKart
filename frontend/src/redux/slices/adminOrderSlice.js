@@ -11,13 +11,7 @@ export const fetchAllOrders = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/admin/orders`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-          },
-        }
-      );
+        `${import.meta.env.VITE_BACKEND_URL}/api/admin/orders`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -32,13 +26,7 @@ export const updateOrderStatus = createAsyncThunk(
     try {
       const response = await axios.put(
         `${import.meta.env.VITE_BACKEND_URL}/api/admin/orders/${id}`,
-        { status },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-          },
-        }
-      );
+        { status });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -52,13 +40,7 @@ export const deleteOrder = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       await axios.delete(
-        `${import.meta.env.VITE_BACKEND_URL}/api/admin/orders/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-          },
-        }
-      );
+        `${import.meta.env.VITE_BACKEND_URL}/api/admin/orders/${id}`);
       return id;
     } catch (error) {
       return rejectWithValue(error.response.data);

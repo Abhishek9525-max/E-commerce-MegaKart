@@ -42,6 +42,10 @@ const userSchema = new mongoose.Schema(
         ref: "Product",
       },
     ],
+    refreshTokenHash: {
+      type: String,
+      select: false,
+    },
   },
   { timestamps: true }
 );

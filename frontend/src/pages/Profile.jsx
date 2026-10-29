@@ -4,7 +4,7 @@ import { HiHeart } from 'react-icons/hi2'
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom';
-import { deleteProfileImage, logout, uploadProfileImage } from '../redux/slices/authSlice';
+import { deleteProfileImage, logoutUser, uploadProfileImage } from '../redux/slices/authSlice';
 import { clearCart } from '../redux/slices/cartSlice';
 import MyOrdersPage from './MyOrdersPage'
 
@@ -24,7 +24,7 @@ const Profile = () => {
   },[user, navigate])
 
   const handleLogout = ()=>{
-    dispatch(logout());
+    dispatch(logoutUser());
     dispatch(clearCart());
     navigate("/login")
   }

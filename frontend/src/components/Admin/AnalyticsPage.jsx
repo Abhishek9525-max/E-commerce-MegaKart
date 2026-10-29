@@ -291,10 +291,7 @@ const AnalyticsPage = () => {
           `${import.meta.env.VITE_BACKEND_URL}/api/admin/analytics`,
           {
             params: appliedRange,
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-            },
-            signal: controller.signal,
+signal: controller.signal,
           }
         );
         if (active) setAnalytics(response.data);

@@ -61,13 +61,7 @@ const Checkout = () => {
     try {
       await axios.put(
         `${import.meta.env.VITE_BACKEND_URL}/api/checkout/${checkoutId}/pay`,
-        { paymentStatus: "paid", paymentDetails: details },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-          },
-        }
-      );
+        { paymentStatus: "paid", paymentDetails: details });
 
       await handleFinalizeCheckout(checkoutId); // Finalize checkout if payment is success
     } catch (error) {
@@ -86,13 +80,7 @@ const Checkout = () => {
         `${
           import.meta.env.VITE_BACKEND_URL
         }/api/checkout/${checkoutId}/finalize`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-          },
-        }
-      );
+        {});
       navigate("/order-confirmation");
     } catch (error) {
       console.error(error);

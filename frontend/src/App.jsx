@@ -27,6 +27,9 @@ import { Provider } from "react-redux";
 import store from "./redux/store";
 import ProtectedRoute from "./components/Common/ProtectedRoute";
 import { FiAlertTriangle, FiCheck, FiInfo, FiX } from "react-icons/fi";
+import "./utils/authSession";
+import { useDispatch } from "react-redux";
+import { initializeAuth, logout } from "./redux/slices/authSlice";
 
 const notificationIcon = (Icon, backgroundColor) => (
   <span
@@ -48,10 +51,26 @@ function ScrollToTop() {
   return null;
 }
 
+function AuthSession() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(initializeAuth());
+    const handleExpiredSession = () => dispatch(logout());
+    window.addEventListener("auth:expired", handleExpiredSession);
+    return () => {
+      window.removeEventListener("auth:expired", handleExpiredSession);
+    };
+  }, [dispatch]);
+
+  return null;
+}
+
 function App() {
   return (
     <Provider store={store}>
       <BrowserRouter>
+        <AuthSession />
         <ScrollToTop />
         <Toaster
           position="top-right"

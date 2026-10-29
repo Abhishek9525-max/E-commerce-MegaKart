@@ -1,6 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+dotenv.config();
+require("./utils/authTokens").validateAuthConfig();
+
 const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const productRoutes = require("./routes/productRoutes");
@@ -14,12 +17,25 @@ const productAdminRoutes = require("./routes/productAdminRoutes");
 const adminOrderRoutes = require("./routes/adminOrderRoutes");
 const adminAnalyticsRoutes = require("./routes/adminAnalyticsRoutes");
 const favoriteRoutes = require("./routes/favoriteRoutes");
+const cookieParser = require("./middleware/cookieMiddleware");
+const {
+  configuredOrigins,
+  requireTrustedOrigin,
+} = require("./middleware/csrfMiddleware");
 
 const app = express();
 app.use(express.json());
-app.use(cors());
-
-dotenv.config();
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || configuredOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("Origin is not allowed by CORS."));
+  },
+  credentials: true,
+}));
+app.use(cookieParser);
+app.use(requireTrustedOrigin);
 
 const PORT = process.env.PORT || 3000;
 

@@ -2,17 +2,12 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const API_URL = `${import.meta.env.VITE_BACKEND_URL}`;
-const USER_TOKEN = `Bearer ${localStorage.getItem("userToken")}`
 
 // async thunk to fetch admin products
 export const fetchAdminProducts = createAsyncThunk(
   "adminProduct/fetchProducts",
   async () => {
-    const response = await axios.get(`${API_URL}/api/admin/products`, {
-      headers: {
-        Authorization: USER_TOKEN,
-      },
-    });
+    const response = await axios.get(`${API_URL}/api/admin/products`);
     return response.data;
   }
 );
@@ -21,11 +16,7 @@ export const fetchAdminProductById = createAsyncThunk(
   "adminProducts/fetchProductById",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/api/admin/products/${id}`, {
-        headers: {
-          Authorization: USER_TOKEN,
-        },
-      });
+      const response = await axios.get(`${API_URL}/api/admin/products/${id}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -42,13 +33,7 @@ export const createProduct = createAsyncThunk(
     try {
       const response = await axios.post(
         `${API_URL}/api/admin/products`,
-        productData,
-        {
-          headers: {
-            Authorization: USER_TOKEN,
-          },
-        }
-      );
+        productData);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -65,13 +50,7 @@ export const updateProduct = createAsyncThunk(
     try {
       const response = await axios.put(
         `${API_URL}/api/admin/products/${id}`,
-        productData,
-        {
-          headers: {
-            Authorization: USER_TOKEN,
-          },
-        }
-      );
+        productData);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -85,11 +64,7 @@ export const updateProduct = createAsyncThunk(
 export const deleteProduct = createAsyncThunk(
   "adminProducts/deleteProduct",
   async (id) => {
-    await axios.delete(`${API_URL}/api/products/${id}`, {
-      headers: {
-        Authorization: USER_TOKEN,
-      },
-    });
+    await axios.delete(`${API_URL}/api/products/${id}`);
     return id;
   }
 );
