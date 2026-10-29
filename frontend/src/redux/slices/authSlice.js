@@ -62,12 +62,31 @@ export const loginUser = createAsyncThunk(
   }
 );
 
+export const requestRegistrationOtp = createAsyncThunk(
+  "auth/requestRegistrationOtp",
+  async (userData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/register`,
+        userData
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({
+        message:
+          error.response?.data?.message ||
+          "Unable to send a verification code. Please try again.",
+      });
+    }
+  }
+);
+
 export const registerUser = createAsyncThunk(
   "auth/registerUser",
   async (userData, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/users/register`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/register/verify-otp`,
         userData
       );
       localStorage.setItem("userInfo", JSON.stringify(response.data.user));
@@ -192,6 +211,17 @@ const authSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(registerUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || action.error.message;
+      })
+      .addCase(requestRegistrationOtp.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(requestRegistrationOtp.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(requestRegistrationOtp.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || action.error.message;
       })

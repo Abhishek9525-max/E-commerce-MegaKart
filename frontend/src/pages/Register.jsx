@@ -3,7 +3,10 @@ import { FiCheck, FiEye, FiEyeOff } from "react-icons/fi";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import register from "../assets/register.webp";
-import { registerUser } from "../redux/slices/authSlice";
+import {
+  registerUser,
+  requestRegistrationOtp,
+} from "../redux/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { mergeCart } from "../redux/slices/cartSlice";
 
@@ -18,6 +21,8 @@ const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
 
@@ -54,12 +59,46 @@ const Register = () => {
     }
 
     try {
+      if (!otpSent) {
+        await dispatch(
+          requestRegistrationOtp({
+            name: name.trim(),
+            email: email.trim(),
+            password,
+          })
+        ).unwrap();
+        setOtpSent(true);
+        toast.success("A verification code was sent to your email.");
+        return;
+      }
+
       await dispatch(
-        registerUser({ name: name.trim(), email: email.trim(), password })
+        registerUser({
+          name: name.trim(),
+          email: email.trim(),
+          password,
+          otp: otp.trim(),
+        })
       ).unwrap();
-      toast.success("Your account is ready. Welcome to MegaKart.");
+      toast.success("Your email is verified. Welcome to MegaKart.");
     } catch (error) {
-      toast.error(error?.message || "Unable to create your account. Please try again.");
+      toast.error(error?.message || "Unable to complete registration. Please try again.");
+    }
+  };
+
+  const handleResendOtp = async () => {
+    try {
+      await dispatch(
+        requestRegistrationOtp({
+          name: name.trim(),
+          email: email.trim(),
+          password,
+        })
+      ).unwrap();
+      setOtp("");
+      toast.success("A new verification code was sent to your email.");
+    } catch (error) {
+      toast.error(error?.message || "Unable to send a verification code.");
     }
   };
 
@@ -109,7 +148,11 @@ const Register = () => {
               type="email"
               autoComplete="email"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(event) => {
+                setEmail(event.target.value);
+                setOtpSent(false);
+                setOtp("");
+              }}
               className="w-full border border-[#D8D2C8] bg-[#FAF9F6] px-4 py-3 text-sm text-[#171714] outline-none transition focus:border-[#414B36] focus:ring-2 focus:ring-[#414B36]/10"
               placeholder="you@example.com"
               required
@@ -163,12 +206,51 @@ const Register = () => {
               </p>
             )}
           </div>
+          {otpSent && (
+            <div className="mb-5">
+              <label htmlFor="register-otp" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-[#414B36]">
+                Email verification code
+              </label>
+              <input
+                id="register-otp"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                value={otp}
+                onChange={(event) =>
+                  setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))
+                }
+                className="w-full border border-[#D8D2C8] bg-[#FAF9F6] px-4 py-3 text-sm tracking-[0.3em] text-[#171714] outline-none transition focus:border-[#414B36] focus:ring-2 focus:ring-[#414B36]/10"
+                placeholder="000000"
+                required
+              />
+              <p className="mt-2 text-xs text-[#77746D]">
+                Enter the 6-digit code sent to {email}. It expires in 10 minutes.
+              </p>
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                disabled={loading}
+                className="mt-2 text-xs font-semibold text-[#414B36] underline underline-offset-4 disabled:cursor-wait disabled:opacity-60"
+              >
+                Resend code
+              </button>
+            </div>
+          )}
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || (otpSent && otp.length !== 6)}
             className="luxury-button w-full disabled:cursor-wait disabled:opacity-70"
           >
-            {loading ? "Creating account..." : "Create account"}
+            {loading
+              ? otpSent
+                ? "Verifying code..."
+                : "Sending code..."
+              : otpSent
+                ? "Verify code & create account"
+                : "Continue with email"}
           </button>
           <p className="mt-6 text-center text-sm text-[#77746D]">
             Already have an account?{" "}

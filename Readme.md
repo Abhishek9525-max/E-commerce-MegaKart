@@ -31,8 +31,14 @@ Authentication uses short-lived access cookies and rotating refresh cookies. Bot
 - `FRONTEND_URL` (or comma-separated `CORS_ORIGINS`): exact frontend origin(s), including scheme.
 - `COOKIE_SAME_SITE=none` and `COOKIE_SECURE=true` when the frontend and API are on different sites. For same-site deployments, `lax` may be used.
 - `COOKIE_DOMAIN` only when cookies need to be shared across subdomains.
+- `REDIS_URL`: Redis connection URL used for short-lived registration verification codes.
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASS`: SMTP connection settings used to deliver registration codes.
+- `SMTP_SECURE=true` when the SMTP server requires implicit TLS (typically port 465); otherwise use `false` (typically port 587).
+- `SMTP_FROM` (optional): sender address shown on registration verification emails; defaults to `SMTP_USER`.
 
 Local development allows `http://localhost:5173` and `http://127.0.0.1:5173` by default. The frontend `VITE_BACKEND_URL` must point to the API origin. After switching from bearer tokens, users must sign in again to establish cookie sessions.
+
+New customer registration requires an email verification code. Codes are stored in Redis for 10 minutes, can be requested once per minute, and are limited to five verification attempts.
 
 ---
 

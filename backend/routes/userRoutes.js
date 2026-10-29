@@ -12,6 +12,11 @@ const {
   refreshSecret,
   setAuthCookies,
 } = require("../utils/authTokens");
+const {
+  RegistrationOtpCooldownError,
+  issueRegistrationOtp,
+  verifyRegistrationOtp,
+} = require("../utils/registrationOtp");
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
 const streamifier = require("streamifier");
@@ -58,25 +63,43 @@ const profileImageUpload = multer({
   },
 });
 
+const validateRegistrationInput = (body = {}) => {
+  const { name, email, password } = body;
+  const normalizedName = typeof name === "string" ? name.trim() : "";
+  const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+
+  if (!normalizedName || !normalizedEmail || typeof password !== "string") {
+    return { error: "Name, email, and password are required." };
+  }
+  if (normalizedName.length < 2) {
+    return { error: "Please enter a name with at least 2 characters." };
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+    return { error: "Please enter a valid email address." };
+  }
+  if (
+    password.length < 8 ||
+    !/[A-Z]/.test(password) ||
+    !/[a-z]/.test(password) ||
+    !/\d/.test(password)
+  ) {
+    return {
+      error:
+        "Use at least 8 characters, including an uppercase letter, a lowercase letter, and a number.",
+    };
+  }
+
+  return { normalizedName, normalizedEmail };
+};
+
 // @route POST /api/users/register
-// @desc Register a new user
+// @desc Send a registration verification code
 // @access Public
 
 router.post("/register", async (req, res) => {
-  const { name, email, password } = req.body;
-  const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
-
-  if (!name?.trim() || !normalizedEmail || !password) {
-    return res.status(400).json({ message: "Name, email, and password are required." });
-  }
-  if (name.trim().length < 2) {
-    return res.status(400).json({ message: "Please enter a name with at least 2 characters." });
-  }
-  if (password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password)) {
-    return res.status(400).json({
-      message: "Use at least 8 characters, including an uppercase letter, a lowercase letter, and a number.",
-    });
-  }
+  const validation = validateRegistrationInput(req.body ?? {});
+  if (validation.error) return res.status(400).json({ message: validation.error });
+  const { normalizedName, normalizedEmail } = validation;
 
   try {
     const existingUser = await User.findOne({ email: normalizedEmail }).collation({
@@ -88,7 +111,59 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "An account with this email already exists." });
     }
 
-    const user = new User({ name: name.trim(), email: normalizedEmail, password });
+    await issueRegistrationOtp(normalizedEmail, normalizedName);
+    res.json({ message: "A verification code was sent to your email address." });
+  } catch (error) {
+    if (error instanceof RegistrationOtpCooldownError) {
+      return res.status(429).json({ message: error.message });
+    }
+    console.error("Unable to send registration verification code:", error);
+    res.status(503).json({
+      message: "Unable to send a verification code right now. Please try again later.",
+    });
+  }
+});
+
+// @route POST /api/users/register/verify-otp
+// @desc Verify a registration code and create the user account
+// @access Public
+router.post("/register/verify-otp", async (req, res) => {
+  const requestBody = req.body ?? {};
+  const validation = validateRegistrationInput(requestBody);
+  if (validation.error) return res.status(400).json({ message: validation.error });
+
+  const { normalizedName, normalizedEmail } = validation;
+  const otp = typeof requestBody.otp === "string" ? requestBody.otp.trim() : "";
+  if (!/^\d{6}$/.test(otp)) {
+    return res.status(400).json({ message: "Enter the 6-digit verification code." });
+  }
+
+  try {
+    const existingUser = await User.findOne({ email: normalizedEmail }).collation({
+      locale: "en",
+      strength: 2,
+    });
+    if (existingUser) {
+      return res.status(400).json({ message: "An account with this email already exists." });
+    }
+
+    const otpResult = await verifyRegistrationOtp(normalizedEmail, otp);
+    if (otpResult === "locked") {
+      return res.status(429).json({
+        message: "Too many incorrect codes. Request a new verification code.",
+      });
+    }
+    if (otpResult !== "verified") {
+      return res.status(400).json({
+        message: "The verification code is incorrect or expired. Request a new code.",
+      });
+    }
+
+    const user = new User({
+      name: normalizedName,
+      email: normalizedEmail,
+      password: requestBody.password,
+    });
     await user.save();
     await startSession(user, res);
     res.status(201).json({ user: userResponse(user) });
@@ -96,8 +171,10 @@ router.post("/register", async (req, res) => {
     if (error.code === 11000 && error.keyPattern?.email) {
       return res.status(400).json({ message: "An account with this email already exists." });
     }
-    console.log(error);
-    res.status(500).send("Server Error");
+    console.error("Unable to verify registration code:", error);
+    res.status(503).json({
+      message: "Unable to complete registration right now. Please try again later.",
+    });
   }
 });
 

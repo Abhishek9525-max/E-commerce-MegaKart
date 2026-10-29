@@ -30,6 +30,9 @@ useEffect(()=>{
     password: "",
     role: "customer",
   });
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   const handleChange = (e) => {
     setFormData({
@@ -56,10 +59,20 @@ useEffect(()=>{
     // console.log({ id: userId, role: newRole });
   };
 
-  const handleDeleteUser = (userId) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      dispatch(deleteUser(userId))
-      // console.log("Deleting user with ID", userId);
+  const handleDeleteUser = async () => {
+    if (!userToDelete || isDeleting) return;
+
+    setIsDeleting(true);
+    setDeleteError("");
+    try {
+      await dispatch(deleteUser(userToDelete._id)).unwrap();
+      setUserToDelete(null);
+    } catch (requestError) {
+      setDeleteError(
+        requestError?.message || "Unable to delete user. Please try again."
+      );
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -183,7 +196,11 @@ useEffect(()=>{
                     <span className="text-xs font-medium text-[#85847c]">You</span>
                   ) : (
                     <button
-                      onClick={() => handleDeleteUser(listedUser._id)}
+                      type="button"
+                      onClick={() => {
+                        setDeleteError("");
+                        setUserToDelete(listedUser);
+                      }}
                       className="text-xs font-semibold text-[#a94f38] hover:underline"
                     >
                       Delete
@@ -203,6 +220,61 @@ useEffect(()=>{
         </table>
         </div>
       </section>
+      {userToDelete && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#171714]/45 p-4 backdrop-blur-[2px]"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !isDeleting) {
+              setUserToDelete(null);
+              setDeleteError("");
+            }
+          }}
+        >
+          <section
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-user-title"
+            aria-describedby="delete-user-description"
+            className="w-full max-w-md border border-[#e7e4dc] bg-white p-6 shadow-[0_24px_70px_rgba(23,23,20,0.2)]"
+          >
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#a94f38]">
+              Confirm deletion
+            </p>
+            <h2 id="delete-user-title" className="text-xl font-medium text-[#292b25]">
+              Delete this user?
+            </h2>
+            <p id="delete-user-description" className="mt-2 text-sm leading-6 text-[#77766e]">
+              “{userToDelete.name}” will be permanently removed from your customer directory.
+            </p>
+            {deleteError && (
+              <p role="alert" className="mt-4 border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                {deleteError}
+              </p>
+            )}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setUserToDelete(null);
+                  setDeleteError("");
+                }}
+                disabled={isDeleting}
+                className="min-h-10 border border-[#dedbd3] px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#55564f] transition-colors hover:bg-[#faf9f6] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteUser}
+                disabled={isDeleting}
+                className="min-h-10 bg-[#a94f38] px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-white transition-colors hover:bg-[#873c2a] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isDeleting ? "Deleting…" : "Delete user"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 };
