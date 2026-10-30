@@ -3,7 +3,9 @@ import { FiCheck, FiEye, FiEyeOff } from "react-icons/fi";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import register from "../assets/register.webp";
+import GoogleSignInButton from "../components/Common/GoogleSignInButton";
 import {
+  googleLogin,
   registerUser,
   requestRegistrationOtp,
 } from "../redux/slices/authSlice";
@@ -105,6 +107,25 @@ const Register = () => {
       toast.success("A new verification code was sent to your email.");
     } catch (error) {
       toast.error(error?.message || "Unable to send a verification code.");
+    }
+  };
+
+  const handleGoogleCredential = async (credential) => {
+    if (!credential) {
+      toast.error("Google did not return a sign-in credential.");
+      return;
+    }
+    try {
+      const result = await dispatch(googleLogin(credential)).unwrap();
+      if (result.welcomeEmailSent === false) {
+        toast.warning(
+          "Your account is ready, but we could not send the welcome email."
+        );
+      } else {
+        toast.success("Welcome to MegaKart.");
+      }
+    } catch (error) {
+      toast.error(error?.message || "Unable to sign in with Google.");
     }
   };
 
@@ -258,6 +279,7 @@ const Register = () => {
                 ? "Verify code & create account"
                 : "Continue with email"}
           </button>
+          <GoogleSignInButton onCredential={handleGoogleCredential} />
           <p className="mt-6 text-center text-sm text-[#77746D]">
             Already have an account?{" "}
             <Link

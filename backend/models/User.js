@@ -17,6 +17,14 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       match: [/.+\@.+|..+/, "Please enter a valid email address"],
     },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    googleWelcomeEmailSentAt: {
+      type: Date,
+    },
     profileImage: {
       type: String,
       default: "",
@@ -28,7 +36,9 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: function () {
+        return !this.googleId;
+      },
       minLength: 6,
     },
     role: {
@@ -66,7 +76,8 @@ userSchema.pre("save", async function (next) {
 //Match User entered password to hashed password
 
 userSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+  if (typeof enteredPassword !== "string" || !this.password) return false;
+  return bcrypt.compare(enteredPassword, this.password);
 };
 
 module.exports = mongoose.model("User", userSchema);

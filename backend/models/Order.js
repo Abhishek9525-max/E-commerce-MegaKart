@@ -51,6 +51,12 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  subtotalPrice: Number,
+  discountCode: String,
+  discountAmount: {
+    type: Number,
+    default: 0,
+  },
   isPaid: {
     type: Boolean,
     default: false,

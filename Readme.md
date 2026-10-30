@@ -31,6 +31,8 @@ Authentication uses short-lived access cookies and rotating refresh cookies. Bot
 - `FRONTEND_URL` (or comma-separated `CORS_ORIGINS`): exact frontend origin(s), including scheme.
 - `COOKIE_SAME_SITE=none` and `COOKIE_SECURE=true` when the frontend and API are on different sites. For same-site deployments, `lax` may be used.
 - `COOKIE_DOMAIN` only when cookies need to be shared across subdomains.
+- `GOOGLE_CLIENT_ID`: Google OAuth Web client ID used by the backend to verify Google ID tokens.
+- `VITE_GOOGLE_CLIENT_ID`: the same Google OAuth Web client ID, configured in Vercel for the frontend build.
 - `REDIS_URL`: Redis connection URL used for short-lived registration verification codes.
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASS`: SMTP connection settings used to deliver transactional emails.
 - `SMTP_SECURE=true` when the SMTP server requires implicit TLS (typically port 465); otherwise use `false` (typically port 587).
@@ -38,6 +40,8 @@ Authentication uses short-lived access cookies and rotating refresh cookies. Bot
 - `ADMIN_NOTIFICATION_EMAIL`: recipient for new-order notification emails.
 
 Local development allows `http://localhost:5173` and `http://127.0.0.1:5173` by default. The frontend `VITE_BACKEND_URL` must point to the API origin. After switching from bearer tokens, users must sign in again to establish cookie sessions.
+
+Google sign-in uses Google Identity Services to obtain an ID token in the browser. Configure a Google OAuth client of type **Web application**, and add each frontend origin (for example, `http://localhost:5173` and the Vercel production/custom domain) to its **Authorized JavaScript origins**. Set the client ID as `VITE_GOOGLE_CLIENT_ID` in Vercel and `GOOGLE_CLIENT_ID` in Render; do not put a client secret in the frontend. No OAuth redirect URI is needed for this ID-token flow. The backend verifies the token and creates a customer account when needed. For security, it does not automatically link a Google identity to an existing password account with the same email; users with an existing account should sign in with their password.
 
 New customer registration requires an email verification code. Codes are stored in Redis for 10 minutes, can be requested once per minute, and are limited to five verification attempts.
 

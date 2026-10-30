@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import login from "../assets/login.webp";
-import { loginUser } from "../redux/slices/authSlice";
+import { googleLogin, loginUser } from "../redux/slices/authSlice";
+import GoogleSignInButton from "../components/Common/GoogleSignInButton";
 import { useDispatch, useSelector } from "react-redux";
 import { mergeCart } from "../redux/slices/cartSlice";
 import { getPostAuthDestination } from "../utils/authRedirect";
@@ -21,6 +22,27 @@ const Login = () => {
 
   const redirect = getPostAuthDestination(
     new URLSearchParams(location.search).get("redirect")
+  );
+  const handleGoogleCredential = useCallback(
+    async (credential) => {
+      if (!credential) {
+        toast.error("Google did not return a sign-in credential.");
+        return;
+      }
+      try {
+        const result = await dispatch(googleLogin(credential)).unwrap();
+        if (result.welcomeEmailSent === false) {
+          toast.warning(
+            "Your account is ready, but we could not send the welcome email."
+          );
+        } else {
+          toast.success("Welcome to MegaKart.");
+        }
+      } catch (error) {
+        toast.error(error?.message || "Unable to sign in with Google.");
+      }
+    },
+    [dispatch]
   );
 
   useEffect(() => {
@@ -113,6 +135,7 @@ const Login = () => {
           >
             {loading ? "Signing in..." : "Sign in"}
           </button>
+          <GoogleSignInButton onCredential={handleGoogleCredential} />
           <div className="mt-4 text-center">
             <Link
               to={`/forgot-password?redirect=${encodeURIComponent(redirect)}`}

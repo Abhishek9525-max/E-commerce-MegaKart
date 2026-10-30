@@ -112,6 +112,22 @@ const OrderDetailsPage = () => {
               </tbody>
             </table>
           </div>
+          {orderDetails.discountAmount > 0 && (
+            <div className="mb-5 ml-auto max-w-xs space-y-2 border-t pt-4 text-sm">
+              <div className="flex justify-between gap-4">
+                <span>Subtotal</span>
+                <span>${Number(orderDetails.subtotalPrice).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between gap-4 text-[#414B36]">
+                <span>Promotion ({orderDetails.discountCode})</span>
+                <span>-${Number(orderDetails.discountAmount).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between gap-4 border-t pt-2 font-semibold text-[#171714]">
+                <span>Total paid</span>
+                <span>${Number(orderDetails.totalPrice).toFixed(2)}</span>
+              </div>
+            </div>
+          )}
           {/* Back to Orders Link  */}
           <Link to="/my-orders" className="text-blue-500 hover:underline">
             Back to My Orders

@@ -14,8 +14,12 @@ const Checkout = () => {
 
   const [checkoutId, setCheckoutId] = useState(null);
   const [checkoutTotal, setCheckoutTotal] = useState(null);
-  const [checkoutError, setCheckoutError] = useState("");
+  const [checkoutSubtotal, setCheckoutSubtotal] = useState(null);
+  const [checkoutDiscount, setCheckoutDiscount] = useState(0);
+  const [promotionCode, setPromotionCode] = useState("");
+  const [checkoutNotice, setCheckoutNotice] = useState("");
   const [paymentSucceeded, setPaymentSucceeded] = useState(false);
+  const [orderConfirmationFailed, setOrderConfirmationFailed] = useState(false);
   const [shippingAddress, setShippingAddress] = useState({
     firstName: "",
     lastName: "",
@@ -36,7 +40,7 @@ const Checkout = () => {
 
   const handleCreateCheckout = async (e) => {
     e.preventDefault();
-    setCheckoutError("");
+    setCheckoutNotice("");
     if (cart && cart.products.length > 0) {
       try {
         const checkout = await dispatch(
@@ -45,14 +49,25 @@ const Checkout = () => {
             shippingAddress,
             paymentMethod: "Paypal",
             totalPrice: cart.totalPrice,
+            promotionCode,
           })
         ).unwrap();
         setCheckoutId(checkout._id);
         setCheckoutTotal(checkout.totalPrice);
+        setCheckoutSubtotal(checkout.subtotalPrice);
+        setCheckoutDiscount(checkout.discountAmount || 0);
       } catch (requestError) {
-        setCheckoutError(
-          requestError?.message || "Unable to prepare checkout. Please try again."
-        );
+        const message =
+          requestError?.message ||
+          requestError?.payload?.message ||
+          requestError?.data?.message ||
+          requestError?.error?.message;
+        const notice =
+          message && message !== "Server Error"
+            ? message
+            : "Unable to prepare checkout. Please try again.";
+        setCheckoutNotice(notice);
+        toast.error(notice, { duration: 6000 });
       }
     }
   };
@@ -67,10 +82,9 @@ const Checkout = () => {
       await handleFinalizeCheckout(checkoutId); // Finalize checkout if payment is success
     } catch (error) {
       console.error(error);
-      setCheckoutError(
-        error.response?.data?.message
-          ? `Payment succeeded, but the order could not be completed: ${error.response.data.message} Please contact support.`
-          : "Payment succeeded, but the order could not be confirmed. Please contact support."
+      setOrderConfirmationFailed(true);
+      toast.warning(
+        "Payment received, but we couldn't confirm your order. Please contact support."
       );
     }
   };
@@ -88,10 +102,9 @@ const Checkout = () => {
       navigate("/order-confirmation");
     } catch (error) {
       console.error(error);
-      setCheckoutError(
-        error.response?.data?.message
-          ? `Payment succeeded, but the order could not be completed: ${error.response.data.message} Please contact support.`
-          : "Payment succeeded, but the order could not be confirmed. Please contact support."
+      setOrderConfirmationFailed(true);
+      toast.warning(
+        "Payment received, but we couldn't confirm your order. Please contact support."
       );
     }
   };
@@ -229,12 +242,33 @@ const Checkout = () => {
               required
             />
           </div>
-          <div className="mt-6">
-            {checkoutError && (
-              <p role="alert" className="mb-4 rounded border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
-                {checkoutError}
+          <div className="mb-4">
+            <label htmlFor="checkout-promotion-code" className="mb-1 block text-gray-700">
+              Promotion code
+            </label>
+            <input
+              id="checkout-promotion-code"
+              type="text"
+              value={promotionCode}
+              onChange={(event) => setPromotionCode(event.target.value)}
+              placeholder="Enter MEGA15"
+              autoComplete="off"
+              disabled={Boolean(checkoutId)}
+              className="w-full rounded border p-2 uppercase tracking-wider disabled:bg-gray-100"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Apply MEGA15 for 15% off before the offer timer expires.
+            </p>
+            {checkoutNotice && (
+              <p
+                role="alert"
+                className="mt-2 rounded border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700"
+              >
+                {checkoutNotice}
               </p>
             )}
+          </div>
+          <div className="mt-6">
             {!checkoutId ? (
               <button
                 type="submit"
@@ -248,15 +282,15 @@ const Checkout = () => {
                 <h3 className="text-lg mb-4">Pay with PayPal</h3>
                 {paymentSucceeded ? (
                   <p className="text-sm text-gray-600" aria-live="polite">
-                    {checkoutError
-                      ? "Your payment was received. Please contact support to resolve this order."
+                    {orderConfirmationFailed
+                      ? "Your payment was received. Please check My Orders or contact support if your order is not listed."
                       : "Payment received. Confirming your order..."}
                   </p>
                 ) : (
                   <PayPalButton
                     amount={checkoutTotal}
                     onSuccess={handlePaymentSuccess}
-                    onError={() => alert("Payment failed. Try again.")}
+                    onError={() => toast.error("Payment failed. Please try again.")}
                   />
                 )}
               </div>
@@ -301,8 +335,18 @@ const Checkout = () => {
         </div>
         <div className="flex justify-between items-center text-lg mb-4">
           <p>Subtotal</p>
-          <p>${Number(cart.totalPrice || 0).toFixed(2)}</p>
+          <p>
+            ${Number(checkoutSubtotal ?? cart.totalPrice ?? 0).toFixed(2)}
+          </p>
         </div>
+        {checkoutDiscount > 0 && (
+          <div className="mb-4 flex items-center justify-between gap-3 text-sm text-[#414B36]">
+            <p>
+              Promotion ({promotionCode.trim().toUpperCase() || "MEGA15"})
+            </p>
+            <p>−${Number(checkoutDiscount).toFixed(2)}</p>
+          </div>
+        )}
         <div className="flex justify-between items-center text-lg">
           <p>Shipping</p>
           <p>Free</p>

@@ -9,15 +9,34 @@ const {
   sendAdminNewOrderEmail,
   sendOrderConfirmationEmail,
 } = require("../utils/emailService");
+const { getPromotion, isPromotionActive } = require("../utils/promotion");
 
 const router = express.Router();
+
+router.get("/promotion", async (req, res) => {
+  try {
+    const promotion = await getPromotion();
+    const now = Date.now();
+    res.status(200).json({
+      code: promotion.code,
+      discountPercent: promotion.discountPercent,
+      startsAt: promotion.startsAt,
+      expiresAt: promotion.expiresAt,
+      remainingMilliseconds: Math.max(0, promotion.expiresAt.getTime() - now),
+      active: isPromotionActive(promotion, now),
+    });
+  } catch (error) {
+    console.error("Unable to load the active promotion:", error);
+    res.status(500).json({ message: "Unable to load the promotion." });
+  }
+});
 
 // @route POST /api/checkout
 // @desc Create a new checkout session
 // @access Private
 
 router.post("/", protect, async (req, res) => {
-  const { checkoutItems, shippingAddress, paymentMethod } =
+  const { checkoutItems, shippingAddress, paymentMethod, promotionCode } =
     req.body;
 
   if (!Array.isArray(checkoutItems) || checkoutItems.length === 0) {
@@ -98,6 +117,36 @@ router.post("/", protect, async (req, res) => {
       (total, item) => total + Math.round(item.price * 100) * item.quantity,
       0
     );
+    const subtotalPrice = totalPriceInCents / 100;
+    let discountCode;
+    let discountAmount = 0;
+    const submittedPromotionCode =
+      typeof promotionCode === "string" ? promotionCode.trim().toUpperCase() : "";
+
+    if (submittedPromotionCode) {
+      const promotion = await getPromotion();
+      if (submittedPromotionCode !== promotion.code) {
+        return res.status(400).json({ message: "That promotion code is not valid." });
+      }
+      if (!isPromotionActive(promotion)) {
+        return res.status(410).json({ message: "This promotion has expired." });
+      }
+      if (
+        promotion.redeemedBy.some(
+          (userId) => userId.toString() === req.user._id.toString()
+        )
+      ) {
+        return res.status(409).json({
+          message: "You have already used this promotion.",
+        });
+      }
+
+      const discountInCents = Math.round(
+        totalPriceInCents * (promotion.discountPercent / 100)
+      );
+      discountAmount = discountInCents / 100;
+      discountCode = promotion.code;
+    }
 
     // Create a new checkout session
     const newCheckout = await Checkout.create({
@@ -105,10 +154,40 @@ router.post("/", protect, async (req, res) => {
       checkoutItems: pricedCheckoutItems,
       shippingAddress,
       paymentMethod,
-      totalPrice: totalPriceInCents / 100,
+      subtotalPrice,
+      discountCode,
+      discountAmount,
+      totalPrice: subtotalPrice - discountAmount,
       paymentStatus: "Pending",
       isPaid: false,
     });
+
+    if (discountCode) {
+      const now = new Date();
+      const redemption = await Promotion.updateOne(
+        {
+          code: discountCode,
+          startsAt: { $lte: now },
+          expiresAt: { $gt: now },
+          redeemedBy: { $ne: req.user._id },
+        },
+        { $addToSet: { redeemedBy: req.user._id } }
+      );
+
+      if (redemption.matchedCount !== 1) {
+        await Checkout.deleteOne({ _id: newCheckout._id, user: req.user._id });
+        const promotion = await Promotion.findOne({ code: discountCode });
+        const alreadyRedeemed = promotion?.redeemedBy.some(
+          (userId) => userId.toString() === req.user._id.toString()
+        );
+        return res.status(alreadyRedeemed ? 409 : 410).json({
+          message: alreadyRedeemed
+            ? "You have already used this promotion."
+            : "This promotion has expired.",
+        });
+      }
+    }
+
     // console.log(`Checkout created for user ${req.user._id}`);
     res.status(201).json(newCheckout);
   } catch (error) {
@@ -221,6 +300,9 @@ router.post("/:id/finalize", protect, async (req, res) => {
           shippingAddress: checkout.shippingAddress,
           paymentMethod: checkout.paymentMethod,
           totalPrice: checkout.totalPrice,
+          subtotalPrice: checkout.subtotalPrice,
+          discountCode: checkout.discountCode,
+          discountAmount: checkout.discountAmount,
           isPaid: true,
           paidAt: checkout.paidAt,
           isDelivered: false,

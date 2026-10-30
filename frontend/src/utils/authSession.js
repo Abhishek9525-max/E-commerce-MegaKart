@@ -4,6 +4,7 @@ const API_URL = import.meta.env.VITE_BACKEND_URL || "";
 const REFRESH_URL = `${API_URL}/api/users/auth/refresh`;
 const excludedPaths = [
   "/api/users/login",
+  "/api/users/google",
   "/api/users/register",
   "/api/users/auth/refresh",
   "/api/users/auth/logout",

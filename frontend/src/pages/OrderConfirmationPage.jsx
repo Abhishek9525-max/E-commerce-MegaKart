@@ -114,6 +114,20 @@ const OrderConfirmationPage = () => {
             </div>
 
             <div className="mt-6 border-t border-[#EAE6DF] pt-5">
+              {checkout.discountAmount > 0 && (
+                <>
+                  <div className="mb-2 flex justify-between gap-4 text-sm">
+                    <span className="text-[#77746D]">Subtotal</span>
+                    <span className="text-[#171714]">
+                      {formatCurrency(checkout.subtotalPrice)}
+                    </span>
+                  </div>
+                  <div className="mb-3 flex justify-between gap-4 text-sm text-[#414B36]">
+                    <span>Promotion ({checkout.discountCode})</span>
+                    <span>-{formatCurrency(checkout.discountAmount)}</span>
+                  </div>
+                </>
+              )}
               <div className="flex justify-between gap-4 text-sm">
                 <span className="text-[#77746D]">Total paid</span>
                 <span className="font-semibold text-[#171714]">

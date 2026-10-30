@@ -62,6 +62,29 @@ export const loginUser = createAsyncThunk(
   }
 );
 
+export const googleLogin = createAsyncThunk(
+  "auth/googleLogin",
+  async (credential, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/google`,
+        { credential }
+      );
+      localStorage.setItem("userInfo", JSON.stringify(response.data.user));
+      return {
+        user: response.data.user,
+        welcomeEmailSent: response.data.welcomeEmailSent,
+      };
+    } catch (error) {
+      return rejectWithValue({
+        message:
+          error.response?.data?.message ||
+          "Unable to sign in with Google. Please try again.",
+      });
+    }
+  }
+);
+
 export const requestRegistrationOtp = createAsyncThunk(
   "auth/requestRegistrationOtp",
   async (userData, { rejectWithValue }) => {
@@ -201,6 +224,19 @@ const authSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(loginUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || action.error.message;
+      })
+      .addCase(googleLogin.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(googleLogin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.initialized = true;
+        state.user = action.payload.user;
+      })
+      .addCase(googleLogin.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || action.error.message;
       })

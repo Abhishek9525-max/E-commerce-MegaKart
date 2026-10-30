@@ -51,6 +51,16 @@ const checkoutSchema = new mongoose.Schema(
     totalPrice: {
       type: Number,
     },
+    subtotalPrice: {
+      type: Number,
+    },
+    discountCode: {
+      type: String,
+    },
+    discountAmount: {
+      type: Number,
+      default: 0,
+    },
     isPaid: {
       type: Boolean,
       default: false,

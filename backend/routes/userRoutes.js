@@ -3,6 +3,7 @@ require("dotenv").config();
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const { OAuth2Client } = require("google-auth-library");
 const {protect} = require('../middleware/authMiddleware')
 const {
   REFRESH_COOKIE,
@@ -28,6 +29,7 @@ const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
 const streamifier = require("streamifier");
 const router = express.Router();
+const googleClient = new OAuth2Client();
 
 const userResponse = (user) => ({
   _id: user._id,
@@ -51,6 +53,24 @@ const startSession = async (user, res) => {
   user.refreshTokenHash = tokens.refreshTokenHash;
   await user.save();
   setAuthCookies(res, tokens);
+};
+
+const sendGoogleWelcomeEmailOnce = async (user) => {
+  if (user.googleWelcomeEmailSentAt) return null;
+
+  try {
+    await sendWelcomeEmail(user);
+    const sentAt = new Date();
+    await User.updateOne(
+      { _id: user._id, googleWelcomeEmailSentAt: { $exists: false } },
+      { $set: { googleWelcomeEmailSentAt: sentAt } }
+    );
+    user.googleWelcomeEmailSentAt = sentAt;
+    return true;
+  } catch (error) {
+    console.error(`Unable to send welcome email for user ${user._id}:`, error);
+    return false;
+  }
 };
 
 cloudinary.config({
@@ -308,7 +328,7 @@ router.post("/forgot-password/reset", async (req, res) => {
 // @desc Authenticate user
 // @access Public
 router.post('/login', async(req,res)=>{
-  const {email,password} = req.body;
+  const {email,password} = req.body ?? {};
   const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
 
   try{
@@ -317,7 +337,9 @@ router.post('/login', async(req,res)=>{
       "+sessionVersion"
     );
 
-    if(!user) return res.status(400).json({message: 'Invalid Credentials'});
+    if(!user || !user.password) {
+      return res.status(400).json({message: 'Invalid Credentials'});
+    }
     const isMatch = await user.matchPassword(password);
 
     if(!isMatch) return res.status(400).json({message: 'Invalid Credential'});
@@ -328,6 +350,97 @@ router.post('/login', async(req,res)=>{
   catch (error){   
     console.error(error);
     res.status(500).send('Server Error');
+  }
+});
+
+router.post("/google", async (req, res) => {
+  const credential =
+    typeof req.body?.credential === "string" ? req.body.credential : "";
+  if (!credential) {
+    return res.status(400).json({ message: "A Google credential is required." });
+  }
+
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    console.error("Google sign-in is unavailable because GOOGLE_CLIENT_ID is not configured.");
+    return res.status(503).json({ message: "Google sign-in is not configured." });
+  }
+
+  let googleProfile;
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: clientId,
+    });
+    googleProfile = ticket.getPayload();
+  } catch {
+    return res.status(401).json({ message: "Unable to verify your Google sign-in." });
+  }
+
+  const googleId = googleProfile?.sub;
+  const email =
+    typeof googleProfile?.email === "string"
+      ? googleProfile.email.trim().toLowerCase()
+      : "";
+  if (!googleId || !email || googleProfile.email_verified !== true) {
+    return res.status(401).json({
+      message: "Google must provide a verified email address to sign in.",
+    });
+  }
+
+  try {
+    let user = await User.findOne({ googleId }).select("+sessionVersion");
+    if (!user) {
+      const emailAccount = await User.findOne({ email }).collation({
+        locale: "en",
+        strength: 2,
+      });
+      if (emailAccount) {
+        return res.status(409).json({
+          message:
+            "An account with this email already exists. Sign in with your password instead.",
+        });
+      }
+
+      user = new User({
+        name:
+          typeof googleProfile.name === "string" && googleProfile.name.trim()
+            ? googleProfile.name.trim()
+            : email.split("@")[0],
+        email,
+        googleId,
+        profileImage:
+          typeof googleProfile.picture === "string" ? googleProfile.picture : "",
+      });
+      await user.save();
+    }
+
+    await startSession(user, res);
+    const welcomeEmailSent = await sendGoogleWelcomeEmailOnce(user);
+    return res.json({ user: userResponse(user), welcomeEmailSent });
+  } catch (error) {
+    if (error.code === 11000) {
+      const existingGoogleUser = await User.findOne({ googleId }).select(
+        "+sessionVersion"
+      );
+      if (existingGoogleUser) {
+        await startSession(existingGoogleUser, res);
+        const welcomeEmailSent =
+          await sendGoogleWelcomeEmailOnce(existingGoogleUser);
+        return res.json({
+          user: userResponse(existingGoogleUser),
+          welcomeEmailSent,
+        });
+      }
+      if (error.keyPattern?.email) {
+        return res.status(409).json({
+          message:
+            "An account with this email already exists. Sign in with your password instead.",
+        });
+      }
+    }
+    console.error("Unable to sign in with Google:", error);
+    return res.status(500).json({ message: "Unable to sign in with Google." });
   }
 });
 

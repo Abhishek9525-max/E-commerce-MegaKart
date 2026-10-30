@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Hero from "../components/Layout/Hero";
+import MarketingPopup from "../components/Layout/MarketingPopup";
 import TrustBar from "../components/Layout/TrustBar";
 import GenderCollectionSection from "../components/Products/GenderCollectionSection";
 import NewArrivals from "../components/Products/NewArrivals";
@@ -40,6 +41,7 @@ const Home = () => {
   }, [dispatch]);
   return (
     <div>
+      <MarketingPopup />
       <Hero />
       <TrustBar />
       <GenderCollectionSection />
