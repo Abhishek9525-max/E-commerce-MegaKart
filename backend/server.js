@@ -19,6 +19,7 @@ const adminAnalyticsRoutes = require("./routes/adminAnalyticsRoutes");
 const favoriteRoutes = require("./routes/favoriteRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const adminReviewRoutes = require("./routes/adminReviewRoutes");
+const chatRoutes = require("./routes/chatRoutes");
 const cookieParser = require("./middleware/cookieMiddleware");
 const {
   configuredOrigins,
@@ -26,6 +27,7 @@ const {
 } = require("./middleware/csrfMiddleware");
 
 const app = express();
+app.set("trust proxy", 1);
 app.use(express.json());
 app.use(cors({
   origin(origin, callback) {
@@ -54,6 +56,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/chat", chatRoutes);
 app.use("/api/favorites", favoriteRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/upload", uploadRoutes);

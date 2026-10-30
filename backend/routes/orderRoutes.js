@@ -1,4 +1,5 @@
  const express = require('express')
+ const mongoose = require('mongoose')
  const Order = require('../models/Order')
  const {protect} = require('../middleware/authMiddleware');
 
@@ -28,7 +29,14 @@
  // @access Private
  router.get("/:id", protect, async(req,res)=>{
   try{
-    const order = await Order.findById(req.params.id).populate(
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({message: "Order not found"})
+    }
+
+    const order = await Order.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    }).populate(
       "user",
       "name email"
     );

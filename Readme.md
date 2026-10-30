@@ -63,7 +63,47 @@ npm run migrate:review-indexes:apply
 
 Back up the database before applying the migration. The migration also reconciles each product's `rating` and `numReviews` from its review documents, clearing seeded placeholder metrics where no reviews exist. If duplicate `(user, product)` reviews exist or a document has invalid/conflicting references or an invalid rating, migration stops before changing indexes, reviews, or product metrics; resolve the records manually without deleting valid reviews, then rerun. For a database without legacy references, Mongoose declares the same indexes, but production deployments should still run this explicit migration because Mongoose does not remove obsolete indexes.
 
-The backend integration test uses Node's built-in test runner and an isolated MongoDB database whose name contains `test`. Set `TEST_MONGO_URL` to that database and run `npm test` from `backend/`.
+## Shopping assistant
+
+The customer-facing assistant uses a provider adapter: Gemini is the hosted default, Ollama is optional for local development, and deterministic replies remain available when AI is disabled, misconfigured, unavailable, timed out, or rate-limited. Gemini requests use the documented `gemini-3.5-flash-lite` model by default through Google's still-supported `generateContent` REST API, with bounded conversation history, a configurable timeout, and a 160-token output cap. Only catalogue/support context and sanitized recent messages are sent to AI. Order status is looked up from MongoDB and is never sent to an AI provider.
+
+Products are searched only among published, in-stock items; budget recommendations apply the active sale price. Requests with INR/rupee budgets ask for currency clarification because MegaKart's existing catalogue and storefront prices are in USD; the assistant does not perform currency conversion. Product cards always use real MongoDB IDs, names, prices, and images. Shipping prices/timelines, return/refund terms, warranty information, and payment policies are not confirmed in the current store information, so the assistant refers customers to the configured support address instead of inventing policies.
+
+### Local setup
+
+Copy `backend/.env.example` to `backend/.env`, fill in the existing MongoDB and authentication settings, and add an API key from [Google AI Studio](https://aistudio.google.com/apikey). Keep the key only on the backend; do not add it to any `VITE_` variable. From the repository root:
+
+```powershell
+cd backend
+npm install
+npm test
+npm run dev
+```
+
+Default hosted configuration:
+
+```dotenv
+AI_PROVIDER=gemini
+GEMINI_API_KEY=<Google AI Studio API key>
+GEMINI_MODEL=gemini-3.5-flash-lite
+GEMINI_TIMEOUT_MS=20000
+CHAT_AI_DAILY_LIMIT=50
+SUPPORT_EMAIL=megakart991@gmail.com
+```
+
+`GEMINI_TIMEOUT_MS` is optional and accepts 1,000–60,000 milliseconds (default 20,000). If Gemini is temporarily overloaded, the assistant does not retry automatically; it returns its safe fallback and logs Google's status and diagnostic message without logging the key or prompt.
+
+For local Ollama only, install [Ollama](https://ollama.com/) and pull the model with `ollama pull gemma3:1b`, then set `AI_PROVIDER=ollama`, `OLLAMA_URL=http://127.0.0.1:11434`, and `OLLAMA_MODEL=gemma3:1b`. Set `AI_PROVIDER=none` to disable model calls and use rule-based responses.
+
+### Render deployment and free-tier limits
+
+Add the same AI variables to the Render backend service's Environment settings. Keep `GEMINI_API_KEY` secret and do not define it in Vercel. Vercel needs only the existing `VITE_BACKEND_URL`; keep the current `FRONTEND_URL`/`CORS_ORIGINS` and cookie settings for the deployed Vercel origin. `OLLAMA_*` variables are not needed on Render.
+
+To avoid paid usage, create/use a Gemini project that has **not** been upgraded or linked to Cloud Billing, and do not enable paid billing, prepaid credits, or auto-reload. The application does not retry quota failures, change models, or switch to a paid provider; it falls back to database-backed product search and verified support responses. The free-tier model list, eligibility, rate limits, and daily quotas are controlled by Google, vary by project/model/region, and may change. Check the [official Gemini pricing](https://ai.google.dev/gemini-api/docs/pricing) and [active rate limits](https://ai.google.dev/gemini-api/docs/rate-limits) before deployment. Exhausted quotas or unavailable free-tier access temporarily disable natural-language replies but do not disable product search or authenticated order lookup.
+
+Requests are limited to 15 per client IP per 10 minutes, input to 500 characters, conversation context to six short messages, and AI output to 160 tokens. Identical greetings can reuse a short-lived in-memory response; confirmed policy answers bypass AI entirely. AI calls are capped at 50 per server process per UTC day by default (`CHAT_AI_DAILY_LIMIT` can lower or raise this up to 1,000). These in-memory controls are per Render process and reset on restart/scale; provider project quotas remain the authoritative shared limit. No quota design can guarantee a hosted service remains free indefinitely.
+
+To run the backend test suite, use `npm test` from `backend/`. Tests use Node's built-in test runner and stub database/provider calls; no external AI key or MongoDB instance is required.
 
 ---
 
