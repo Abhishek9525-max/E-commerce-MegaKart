@@ -159,7 +159,7 @@ const CollectionPage = () => {
                     type='button'
                     onClick={() => removeFilter(key)}
                     aria-label={`Remove ${label} filter`}
-                    className='inline-flex items-center gap-2 rounded border border-[#EAE6DF] bg-white px-2.5 py-1.5 text-xs text-[#33342E] transition-colors hover:border-[#A7A197]'
+                    className='inline-flex min-h-11 items-center gap-2 rounded border border-[#EAE6DF] bg-white px-2.5 py-1.5 text-xs text-[#33342E] transition-colors hover:border-[#A7A197]'
                   >
                     <span>{label}: <strong className='font-medium text-[#171714]'>{value}</strong></span>
                     <span aria-hidden='true' className='text-[#77746D]'>×</span>
@@ -168,7 +168,7 @@ const CollectionPage = () => {
                 <button
                   type='button'
                   onClick={resetFilters}
-                  className='px-1 text-xs font-medium text-[#A94F38] transition-colors hover:text-[#803A2A]'
+                  className='min-h-11 px-2 text-xs font-medium text-[#A94F38] transition-colors hover:text-[#803A2A]'
                 >
                   Reset All
                 </button>
@@ -193,7 +193,7 @@ const CollectionPage = () => {
                 onClick={toggleSidebar}
                 aria-expanded={isSidebarOpen}
                 aria-controls='collection-filters'
-                className='inline-flex items-center gap-2 rounded-md border border-[#EAE6DF] bg-white px-3 py-2 text-xs font-medium text-[#171714] lg:hidden'
+                className='inline-flex min-h-11 items-center gap-2 rounded-md border border-[#EAE6DF] bg-white px-3 py-2 text-xs font-medium text-[#171714] lg:hidden'
               >
                 <FaFilter aria-hidden='true' />
                 Filters

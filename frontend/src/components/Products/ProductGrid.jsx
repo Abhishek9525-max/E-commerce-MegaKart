@@ -13,13 +13,13 @@ const ProductGrid = ({ products, loading, error }) => {
   }
 
   return (
-    <div className="grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+    <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
       {products.map((product) => {
         const pricing = getProductPricing(product);
         return (
           <article
             key={product._id}
-            className="group relative h-full min-w-0 bg-white p-3 transition-shadow duration-300 hover:shadow-[0_12px_32px_rgba(23,23,20,0.08)] sm:p-4"
+            className="group relative h-full min-w-0 bg-white p-2.5 transition-shadow duration-300 hover:shadow-[0_12px_32px_rgba(23,23,20,0.08)] sm:p-4"
           >
               <div className="relative mb-4 aspect-[3/4] w-full overflow-hidden bg-[#F0EDE7]">
                 <Link

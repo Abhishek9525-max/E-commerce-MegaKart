@@ -126,13 +126,13 @@ const ProductReviewsPanel = ({ productId }) => {
       )}
 
       {reviewToDelete && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#171714]/45 p-4 backdrop-blur-[2px]">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto bg-[#171714]/45 p-4 backdrop-blur-[2px]">
           <section
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="delete-review-title"
             aria-describedby="delete-review-description"
-            className="w-full max-w-md border border-[#e7e4dc] bg-white p-6 shadow-[0_24px_70px_rgba(23,23,20,0.2)]"
+            className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto border border-[#e7e4dc] bg-white p-5 shadow-[0_24px_70px_rgba(23,23,20,0.2)] sm:p-6"
           >
             <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#a94f38]">Confirm moderation</p>
             <h3 id="delete-review-title" className="text-xl font-medium text-[#292b25]">Delete this review?</h3>
@@ -140,11 +140,11 @@ const ProductReviewsPanel = ({ productId }) => {
               This review by {reviewToDelete.reviewerName} will be permanently removed.
             </p>
             {error && <p role="alert" className="mt-4 text-sm text-[#a94f38]">{error}</p>}
-            <div className="mt-6 flex justify-end gap-3">
-              <button type="button" onClick={() => setReviewToDelete(null)} disabled={deleting} className="min-h-10 border border-[#dedbd3] px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#55564f] disabled:opacity-60">
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button type="button" onClick={() => setReviewToDelete(null)} disabled={deleting} className="min-h-11 border border-[#dedbd3] px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#55564f] disabled:opacity-60">
                 Cancel
               </button>
-              <button type="button" onClick={confirmDelete} disabled={deleting} className="min-h-10 bg-[#a94f38] px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-white disabled:opacity-60">
+              <button type="button" onClick={confirmDelete} disabled={deleting} className="min-h-11 bg-[#a94f38] px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-white disabled:opacity-60">
                 {deleting ? "Deleting…" : "Delete review"}
               </button>
             </div>

@@ -34,13 +34,13 @@ const CartDrawer = ({ drawerOpen, toggleCartDrawer }) => {
         }`}
       />
       <div
-        className={`fixed right-0 top-0 z-50 flex h-full w-3/4 flex-col bg-[#F8F7F3] shadow-lg transition-transform duration-300 sm:w-1/2 md:w-[30rem]
+        className={`fixed right-0 top-0 z-50 flex h-full w-[min(100vw,28rem)] flex-col bg-[#F8F7F3] pb-[env(safe-area-inset-bottom)] shadow-lg transition-transform duration-300 sm:w-1/2 md:w-[30rem]
         ${drawerOpen ? "translate-x-0" : "translate-x-full "}`}
       >
         <header className="flex items-start justify-between border-b border-[#D8D2C8] bg-white px-5 py-5 sm:px-6">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2.5">
-              <h2 className="font-display text-[27px] font-medium leading-tight text-[#171714] sm:text-[30px]">
+              <h2 className="font-display text-2xl font-medium leading-tight text-[#171714] sm:text-[30px]">
                 Your Shopping Bag
               </h2>
               {itemCount > 0 && (

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { FiSearch, FiX } from "react-icons/fi";
 import { fetchAllOrders, updateOrderStatus } from "../../redux/slices/adminOrderSlice";
+import { toast } from "sonner";
 
 const ORDERS_PER_PAGE = 10;
 const SEARCH_DEBOUNCE_MS = 350;
@@ -40,8 +41,17 @@ const OrderManagement = () => {
     }
   }, [dispatch, user, navigate, page, searchQuery]);
 
-  const handleStatusChange = (orderId, status) => {
-    dispatch(updateOrderStatus({ id: orderId, status }));
+  const handleStatusChange = async (orderId, status) => {
+    try {
+      const updatedOrder = await dispatch(
+        updateOrderStatus({ id: orderId, status })
+      ).unwrap();
+      if (updatedOrder.emailNotificationSent === false) {
+        toast.warning("Order status saved, but the customer email could not be sent.");
+      }
+    } catch (requestError) {
+      toast.error(requestError?.message || "Unable to update order status.");
+    }
   };
 
   const statusStyles = {

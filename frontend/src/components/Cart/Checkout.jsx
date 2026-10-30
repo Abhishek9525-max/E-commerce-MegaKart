@@ -4,6 +4,7 @@ import PayPalButton from "./PayPalButton";
 import { useDispatch, useSelector } from "react-redux";
 import { createCheckout } from "../../redux/slices/checkoutSlice";
 import axios from "axios";
+import { toast } from "sonner";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -76,11 +77,14 @@ const Checkout = () => {
 
   const handleFinalizeCheckout = async (checkoutId) => {
     try {
-      await axios.post(
+      const response = await axios.post(
         `${
           import.meta.env.VITE_BACKEND_URL
         }/api/checkout/${checkoutId}/finalize`,
         {});
+      if (response.data?.emailNotifications?.customer === false) {
+        toast.warning("Your order is confirmed, but we could not send the confirmation email.");
+      }
       navigate("/order-confirmation");
     } catch (error) {
       console.error(error);
@@ -99,9 +103,9 @@ const Checkout = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto py-10 px-6 tracking-tighter">
+    <div className="mx-auto grid max-w-7xl grid-cols-1 gap-5 px-4 py-6 tracking-tighter sm:gap-8 sm:px-6 sm:py-10 lg:grid-cols-2">
       {/* Left Section */}
-      <div className="bg-white rounded-lg p-6">
+      <div className="min-w-0 rounded-lg bg-white p-4 sm:p-6">
         <h2 className="text-2xl uppercase mb-6">Checkout</h2>
         <form onSubmit={handleCreateCheckout}>
           <h3 className="text-lg mb-4">contact Details</h3>
@@ -115,7 +119,7 @@ const Checkout = () => {
             />
           </div>
           <h3 className="text-lg mb-4">Delivery</h3>
-          <div className="mb-4 grid grid-cols-2 gap-4 ">
+          <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-gray-700 ">First Name</label>
               <input
@@ -163,7 +167,7 @@ const Checkout = () => {
               required
             />
           </div>
-          <div className="mb-4 grid grid-cols-2 gap-4">
+          <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-gray-700 ">City</label>
               <input
@@ -261,22 +265,22 @@ const Checkout = () => {
         </form>
       </div>
       {/* Right Section  */}
-      <div className="bg-gray-50 p-6 rounded-lg">
+      <div className="min-w-0 rounded-lg bg-gray-50 p-4 sm:p-6">
         <h3 className="text-lg mb-4">Order Summary</h3>
         <div className="border-t py-4 mb-4">
           {cart.products.map((product, index) => (
             <div
               key={index}
-              className="flex items-center justify-between py-2 border-b"
+              className="flex min-w-0 items-center justify-between gap-2 border-b py-2"
             >
-              <div className="flex items-start">
+              <div className="flex min-w-0 items-start">
                 <img
                   src={product.image}
                   alt={product.name}
                   className="w-20 h-24 object-cover mr-4"
                 />
-                <div>
-                  <h3 className="text-md">{product.name}</h3>
+                <div className="min-w-0">
+                  <h3 className="break-words text-sm sm:text-base">{product.name}</h3>
                   <p className="text-gray-500">Size: {product.size}</p>
                   <p className="text-gray-500">Color: {product.color}</p>
                 </div>

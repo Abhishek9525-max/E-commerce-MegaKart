@@ -180,7 +180,7 @@ const ProductManagement = () => {
       </div>
       {productToDelete && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#171714]/45 p-4 backdrop-blur-[2px]"
+          className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-[#171714]/45 p-4 backdrop-blur-[2px]"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget && !isDeleting) {
               setProductToDelete(null);
@@ -193,7 +193,7 @@ const ProductManagement = () => {
             aria-modal="true"
             aria-labelledby="delete-product-title"
             aria-describedby="delete-product-description"
-            className="w-full max-w-md border border-[#e7e4dc] bg-white p-6 shadow-[0_24px_70px_rgba(23,23,20,0.2)]"
+            className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto border border-[#e7e4dc] bg-white p-5 shadow-[0_24px_70px_rgba(23,23,20,0.2)] sm:p-6"
           >
             <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#a94f38]">
               Confirm deletion
@@ -209,7 +209,7 @@ const ProductManagement = () => {
                 {deleteError}
               </p>
             )}
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={() => {
@@ -217,7 +217,7 @@ const ProductManagement = () => {
                   setDeleteError("");
                 }}
                 disabled={isDeleting}
-                className="min-h-10 border border-[#dedbd3] px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#55564f] transition-colors hover:bg-[#faf9f6] disabled:cursor-not-allowed disabled:opacity-60"
+                className="min-h-11 border border-[#dedbd3] px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#55564f] transition-colors hover:bg-[#faf9f6] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Cancel
               </button>
@@ -225,7 +225,7 @@ const ProductManagement = () => {
                 type="button"
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="min-h-10 bg-[#a94f38] px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-white transition-colors hover:bg-[#873c2a] disabled:cursor-not-allowed disabled:opacity-60"
+                className="min-h-11 bg-[#a94f38] px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-white transition-colors hover:bg-[#873c2a] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isDeleting ? "Deleting…" : "Delete product"}
               </button>

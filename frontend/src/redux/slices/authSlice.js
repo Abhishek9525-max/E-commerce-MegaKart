@@ -90,7 +90,10 @@ export const registerUser = createAsyncThunk(
         userData
       );
       localStorage.setItem("userInfo", JSON.stringify(response.data.user));
-      return response.data.user;
+      return {
+        user: response.data.user,
+        welcomeEmailSent: response.data.welcomeEmailSent,
+      };
     } catch (error) {
       return rejectWithValue({
         message:
@@ -208,7 +211,7 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
         state.initialized = true;
-        state.user = action.payload;
+        state.user = action.payload.user;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;

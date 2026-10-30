@@ -1,12 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { FiCamera, FiLogOut, FiMail, FiShield, FiTrash2 } from 'react-icons/fi'
+import { FiCamera, FiEye, FiEyeOff, FiLogOut, FiMail, FiShield, FiTrash2 } from 'react-icons/fi'
 import { HiHeart } from 'react-icons/hi2'
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import axios from 'axios';
 import { deleteProfileImage, logoutUser, uploadProfileImage } from '../redux/slices/authSlice';
 import { clearCart } from '../redux/slices/cartSlice';
 import MyOrdersPage from './MyOrdersPage'
+import { getLoginUrl } from '../utils/authRedirect'
 
 const Profile = () => {
   const {user} = useSelector((state) => state.auth);
@@ -16,10 +19,27 @@ const Profile = () => {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isDeletingImage, setIsDeletingImage] = useState(false);
   const [imageUploadError, setImageUploadError] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isPasswordFormOpen, setIsPasswordFormOpen] = useState(false);
+  const [visiblePasswords, setVisiblePasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
+
+  const passwordRequirements = [
+    { label: 'At least 8 characters', passed: newPassword.length >= 8 },
+    { label: 'One uppercase letter', passed: /[A-Z]/.test(newPassword) },
+    { label: 'One lowercase letter', passed: /[a-z]/.test(newPassword) },
+    { label: 'One number', passed: /\d/.test(newPassword) },
+  ];
 
   useEffect(()=>{
     if(!user){
-      navigate("/login");
+      navigate(getLoginUrl("/profile"));
     }
   },[user, navigate])
 
@@ -63,6 +83,38 @@ const Profile = () => {
       setImageUploadError(error);
     } finally {
       setIsDeletingImage(false);
+    }
+  };
+
+  const handleChangePassword = async (event) => {
+    event.preventDefault();
+    if (!passwordRequirements.every(({ passed }) => passed)) {
+      toast.error('Please meet all new password requirements.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('Your new passwords do not match.');
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/profile/password`,
+        { currentPassword, newPassword }
+      );
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setVisiblePasswords({ current: false, new: false, confirm: false });
+      setIsPasswordFormOpen(false);
+      toast.success(response.data.message);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || 'Unable to change your password. Please try again.'
+      );
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -150,6 +202,13 @@ const Profile = () => {
                 <FiShield aria-hidden='true' className='h-4 w-4 text-[#414B36]' />
                 Your account is private and secure
               </div>
+              <button
+                type='button'
+                onClick={() => setIsPasswordFormOpen(true)}
+                className='mt-3 text-xs font-medium text-[#414B36] underline underline-offset-4 transition-colors hover:text-[#A94F38]'
+              >
+                Change password
+              </button>
               <Link
                 to='/favorites'
                 className='mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 border border-[#D8D2C8] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-[#414B36] transition-colors hover:border-[#414B36] hover:bg-[#F5F2ED]'
@@ -169,9 +228,129 @@ const Profile = () => {
           </aside>
 
           <section className='min-w-0 rounded-md border border-[#EAE6DF] bg-white shadow-[0_2px_12px_rgba(23,23,20,0.04)]'>
-            <MyOrdersPage/>
+              <MyOrdersPage/>
           </section>
         </div>
+        {isPasswordFormOpen && (
+          <div
+            className='fixed inset-0 z-50 flex items-center justify-center bg-[#171714]/50 p-4'
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget && !isChangingPassword) {
+                setIsPasswordFormOpen(false);
+              }
+            }}
+          >
+            <section
+              aria-labelledby='change-password-title'
+              aria-modal='true'
+              className='max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-md border border-[#EAE6DF] bg-white p-6 shadow-xl sm:p-8'
+              role='dialog'
+            >
+              <div className='mb-6 flex items-start justify-between gap-4'>
+                <div>
+                  <p className='luxury-eyebrow mb-2 text-[#A94F38]'>Account security</p>
+                  <h2 id='change-password-title' className='text-3xl text-[#171714]'>
+                    Change password
+                  </h2>
+                </div>
+                <button
+                  type='button'
+                  aria-label='Close change password form'
+                  onClick={() => setIsPasswordFormOpen(false)}
+                  disabled={isChangingPassword}
+                  className='flex h-9 w-9 shrink-0 items-center justify-center text-xl text-[#77746D] hover:text-[#171714] disabled:opacity-50'
+                >
+                  ×
+                </button>
+              </div>
+              <p className='mb-5 text-sm leading-relaxed text-[#77746D]'>
+                Enter your current password and choose a new one. Other active sessions will be signed out.
+              </p>
+              <form className='grid gap-4' onSubmit={handleChangePassword}>
+                <label className='grid gap-2 text-xs font-semibold uppercase tracking-wider text-[#414B36]'>
+                  Current password
+                  <span className='relative'>
+                    <input
+                      type={visiblePasswords.current ? 'text' : 'password'}
+                      autoComplete='current-password'
+                      value={currentPassword}
+                      onChange={(event) => setCurrentPassword(event.target.value)}
+                      className='w-full border border-[#D8D2C8] bg-[#FAF9F6] px-4 py-3 pr-12 text-sm font-normal normal-case tracking-normal text-[#171714] outline-none transition focus:border-[#414B36] focus:ring-2 focus:ring-[#414B36]/10'
+                      required
+                    />
+                    <button
+                      type='button'
+                      onClick={() => setVisiblePasswords((visible) => ({ ...visible, current: !visible.current }))}
+                      aria-label={visiblePasswords.current ? 'Hide current password' : 'Show current password'}
+                      className='absolute inset-y-0 right-0 flex w-12 items-center justify-center text-[#77746D] hover:text-[#171714]'
+                    >
+                      {visiblePasswords.current ? <FiEyeOff aria-hidden='true' /> : <FiEye aria-hidden='true' />}
+                    </button>
+                  </span>
+                </label>
+                <label className='grid gap-2 text-xs font-semibold uppercase tracking-wider text-[#414B36]'>
+                  New password
+                  <span className='relative'>
+                    <input
+                      type={visiblePasswords.new ? 'text' : 'password'}
+                      autoComplete='new-password'
+                      value={newPassword}
+                      onChange={(event) => setNewPassword(event.target.value)}
+                      className='w-full border border-[#D8D2C8] bg-[#FAF9F6] px-4 py-3 pr-12 text-sm font-normal normal-case tracking-normal text-[#171714] outline-none transition focus:border-[#414B36] focus:ring-2 focus:ring-[#414B36]/10'
+                      required
+                    />
+                    <button
+                      type='button'
+                      onClick={() => setVisiblePasswords((visible) => ({ ...visible, new: !visible.new }))}
+                      aria-label={visiblePasswords.new ? 'Hide new password' : 'Show new password'}
+                      className='absolute inset-y-0 right-0 flex w-12 items-center justify-center text-[#77746D] hover:text-[#171714]'
+                    >
+                      {visiblePasswords.new ? <FiEyeOff aria-hidden='true' /> : <FiEye aria-hidden='true' />}
+                    </button>
+                  </span>
+                </label>
+                <label className='grid gap-2 text-xs font-semibold uppercase tracking-wider text-[#414B36]'>
+                  Confirm new password
+                  <span className='relative'>
+                    <input
+                      type={visiblePasswords.confirm ? 'text' : 'password'}
+                      autoComplete='new-password'
+                      value={confirmPassword}
+                      onChange={(event) => setConfirmPassword(event.target.value)}
+                      className='w-full border border-[#D8D2C8] bg-[#FAF9F6] px-4 py-3 pr-12 text-sm font-normal normal-case tracking-normal text-[#171714] outline-none transition focus:border-[#414B36] focus:ring-2 focus:ring-[#414B36]/10'
+                      required
+                    />
+                    <button
+                      type='button'
+                      onClick={() => setVisiblePasswords((visible) => ({ ...visible, confirm: !visible.confirm }))}
+                      aria-label={visiblePasswords.confirm ? 'Hide confirmed password' : 'Show confirmed password'}
+                      className='absolute inset-y-0 right-0 flex w-12 items-center justify-center text-[#77746D] hover:text-[#171714]'
+                    >
+                      {visiblePasswords.confirm ? <FiEyeOff aria-hidden='true' /> : <FiEye aria-hidden='true' />}
+                    </button>
+                  </span>
+                </label>
+                <div className='grid grid-cols-2 gap-2' aria-live='polite'>
+                  {passwordRequirements.map(({ label, passed }) => (
+                    <p
+                      key={label}
+                      className={`text-xs ${passed ? 'text-[#414B36]' : 'text-[#77746D]'}`}
+                    >
+                      {passed ? '✓' : '○'} {label}
+                    </p>
+                  ))}
+                </div>
+                <button
+                  type='submit'
+                  disabled={isChangingPassword}
+                  className='luxury-button disabled:cursor-wait disabled:opacity-70'
+                >
+                  {isChangingPassword ? 'Updating password...' : 'Update password'}
+                </button>
+              </form>
+            </section>
+          </div>
+        )}
       </div>
     </div>
   )

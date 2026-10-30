@@ -1,6 +1,6 @@
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
 const { createClient } = require("redis");
+const { sendRegistrationVerificationEmail } = require("./emailService");
 
 const OTP_TTL_SECONDS = 10 * 60;
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -8,7 +8,6 @@ const MAX_OTP_ATTEMPTS = 5;
 
 let redisClient;
 let redisConnection;
-let mailTransporter;
 
 class RegistrationOtpCooldownError extends Error {
   constructor() {
@@ -42,28 +41,6 @@ const getRedisClient = async () => {
   return redisClient;
 };
 
-const getMailTransporter = () => {
-  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
-  const port = Number(SMTP_PORT || 587);
-
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS || !Number.isInteger(port) || port < 1) {
-    throw new Error(
-      "SMTP_HOST, SMTP_USER, SMTP_PASS, and a valid SMTP_PORT must be configured."
-    );
-  }
-
-  if (!mailTransporter) {
-    mailTransporter = nodemailer.createTransport({
-      host: SMTP_HOST,
-      port,
-      secure: process.env.SMTP_SECURE === "true" || port === 465,
-      auth: { user: SMTP_USER, pass: SMTP_PASS },
-    });
-  }
-
-  return mailTransporter;
-};
-
 const emailKey = (email) =>
   crypto.createHmac("sha256", process.env.JWT_SECRET).update(email).digest("hex");
 
@@ -89,13 +66,7 @@ const issueRegistrationOtp = async (email, name) => {
 
   try {
     await client.set(otpKey, otpDigest(email, otp), { EX: OTP_TTL_SECONDS });
-    const from = process.env.SMTP_FROM || process.env.SMTP_USER;
-    await getMailTransporter().sendMail({
-      from,
-      to: email,
-      subject: "Your MegaKart verification code",
-      text: `Hello ${name},\n\nYour MegaKart verification code is ${otp}. It expires in 10 minutes.\n\nIf you did not request this code, you can ignore this email.`,
-    });
+    await sendRegistrationVerificationEmail(email, name, otp);
   } catch (error) {
     try {
       await client.del([otpKey, cooldownKey]);

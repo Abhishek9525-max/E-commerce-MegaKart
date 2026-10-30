@@ -57,7 +57,11 @@ const hashRefreshToken = (token) =>
   crypto.createHash("sha256").update(token).digest("hex");
 
 const createAuthTokens = (user) => {
-  const userClaims = { id: user._id.toString(), role: user.role };
+  const userClaims = {
+    id: user._id.toString(),
+    role: user.role,
+    authVersion: user.sessionVersion || 0,
+  };
   const accessToken = jwt.sign(
     { user: userClaims, tokenType: "access" },
     process.env.JWT_SECRET,

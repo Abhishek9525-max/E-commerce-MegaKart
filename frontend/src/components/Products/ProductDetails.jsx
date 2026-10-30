@@ -3,7 +3,7 @@ import { HiArrowLeft, HiArrowRight, HiOutlineShoppingBag } from "react-icons/hi2
 import { FiStar } from "react-icons/fi";
 import { toast } from "sonner";
 import ProductGrid from "./ProductGrid";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchProductDetails,
@@ -122,9 +122,9 @@ const ProductDetails = ({
   ].filter(({ value }) => value);
 
   return (
-    <div className="px-4 pb-8 sm:px-6">
+    <div className="px-3 pb-8 sm:px-6">
       <article className="mx-auto max-w-7xl overflow-hidden rounded-xl border border-[#EAE6DF] bg-white/90 shadow-sm">
-        <div className="grid gap-8 p-5 sm:p-8 lg:grid-cols-2 lg:gap-12 lg:p-12">
+        <div className="grid gap-6 p-3 sm:gap-8 sm:p-8 lg:grid-cols-2 lg:gap-12 lg:p-12">
           <div className="flex min-w-0 flex-col-reverse gap-4 sm:flex-row">
             {images.length > 1 && (
               <div className="flex gap-3 overflow-x-auto sm:w-[76px] sm:shrink-0 sm:flex-col sm:overflow-y-auto">
@@ -204,7 +204,16 @@ const ProductDetails = ({
             )}
             <div className="flex items-start justify-between gap-3">
               <h1 className="text-3xl leading-tight text-[#171714] sm:text-4xl">
-                {selectedProduct.name}
+                {productId ? (
+                  <Link
+                    to={`/product/${selectedProduct._id}`}
+                    className="transition-colors hover:text-[#414B36] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#414B36]"
+                  >
+                    {selectedProduct.name}
+                  </Link>
+                ) : (
+                  selectedProduct.name
+                )}
               </h1>
               <FavoriteButton
                 product={selectedProduct}
@@ -271,7 +280,7 @@ const ProductDetails = ({
                       onClick={() => setSelectedColor(color)}
                       aria-label={`Select ${color}`}
                       aria-pressed={selectedColor === color}
-                      className={`h-9 w-9 rounded-xl border bg-white p-0.5 transition-shadow ${
+                      className={`h-11 w-11 rounded-xl border bg-white p-0.5 transition-shadow ${
                         selectedColor === color
                           ? "border-[#414B36] ring-1 ring-[#414B36]"
                           : "border-[#D8D2C8] hover:ring-1 hover:ring-[#D8D2C8]"
@@ -299,7 +308,7 @@ const ProductDetails = ({
                       type="button"
                       onClick={() => setSelectedSize(size)}
                       aria-pressed={selectedSize === size}
-                      className={`min-w-12 rounded-sm border px-4 py-2 text-xs font-medium transition-colors ${
+                      className={`min-h-11 min-w-12 rounded-sm border px-4 py-2 text-xs font-medium transition-colors ${
                         selectedSize === size
                           ? "border-[#414B36] bg-[#414B36] text-white"
                           : "border-[#D8D2C8] text-[#171714] hover:border-[#414B36]"
@@ -318,7 +327,7 @@ const ProductDetails = ({
                   type="button"
                   onClick={() => handleQuantityChange(-1)}
                   aria-label="Decrease quantity"
-                  className="h-full px-3 text-[#5C5A54] hover:text-[#171714]"
+                  className="h-full min-w-11 px-3 text-[#5C5A54] hover:text-[#171714]"
                 >
                   −
                 </button>
@@ -327,7 +336,7 @@ const ProductDetails = ({
                   type="button"
                   onClick={() => handleQuantityChange(1)}
                   aria-label="Increase quantity"
-                  className="h-full px-3 text-[#5C5A54] hover:text-[#171714]"
+                  className="h-full min-w-11 px-3 text-[#5C5A54] hover:text-[#171714]"
                 >
                   +
                 </button>
@@ -348,7 +357,7 @@ const ProductDetails = ({
             </div>
 
             {productFacts.length > 0 && (
-              <dl className="mt-6 grid grid-cols-1 gap-x-5 gap-y-4 rounded-sm bg-[#F5F2ED] p-4 sm:grid-cols-2">
+              <dl className="mt-6 grid grid-cols-2 gap-x-5 gap-y-4 rounded-sm bg-[#F5F2ED] p-4">
                 {productFacts.map(({ label, value, isUnavailable }) => (
                   <div key={label}>
                     <dt className="luxury-eyebrow text-[8px] text-[#77746D]">

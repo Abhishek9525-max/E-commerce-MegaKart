@@ -6,6 +6,7 @@ import { RiTwitterXLine } from 'react-icons/ri';
 import { FiPhoneCall } from 'react-icons/fi';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { SUPPORT_EMAIL } from '../../utils/support';
 
 
 const Footer = () => {
@@ -34,15 +35,15 @@ const Footer = () => {
 
   return (
     <footer className='border-t border-[#D8D2C8] bg-[#F5F2ED] py-12 text-[#77746D] sm:py-14'>
-      <div className='mx-auto grid max-w-[1440px] grid-cols-1 gap-10 px-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8 lg:px-10'>
-        <div className='lg:pr-3'>
-          <h3 className='mb-4 text-2xl text-[#171714]'>Stay in the know</h3>
-          <p className='mb-4 max-w-sm leading-relaxed text-[#77746D]'>
+      <div className='mx-auto grid max-w-[1440px] grid-cols-2 gap-8 px-5 sm:gap-10 lg:grid-cols-4 lg:gap-8 lg:px-10'>
+        <div className='col-span-2 sm:col-span-1 lg:pr-3'>
+          <h3 className='mb-4 font-display text-[26px] font-medium leading-none tracking-[0.01em] text-[#171714]'>Stay in the know</h3>
+          <p className='mb-4 max-w-sm font-sans text-sm leading-relaxed text-[#77746D]'>
             Be the first to hear about new collections, considered edits, and private offers.
           </p>
-          <p className='mb-6 text-sm font-medium text-[#77746D]'>Sign up and receive 10% off your first order.</p>
+          <p className='mb-6 font-sans text-sm font-medium leading-relaxed text-[#77746D]'>Sign up and receive 10% off your first order.</p>
 
-          <form className='flex max-w-md' onSubmit={handleSubscribe}>
+          <form className='flex max-w-md font-sans' onSubmit={handleSubscribe}>
             <input
               type="email"
               value={email}
@@ -63,8 +64,8 @@ const Footer = () => {
         </div>
 
         <div>
-          <h3 className='mb-4 text-2xl text-[#171714]'>Shop</h3>
-          <ul className='space-y-2.5 text-[#77746D]'>
+          <h3 className='mb-4 font-display text-[26px] font-medium leading-none tracking-[0.01em] text-[#171714]'>Shop</h3>
+          <ul className='space-y-2.5 font-sans text-sm leading-relaxed text-[#77746D]'>
             <li>
               <Link to='/collection/all?gender=Men' className='transition-colors hover:text-[#414B36]'>
                 Men
@@ -89,27 +90,32 @@ const Footer = () => {
         </div>
 
         <div>
-          <h3 className='mb-4 text-2xl text-[#171714]'>Support</h3>
-          <ul className='space-y-2.5 text-[#77746D]'>
+          <h3 className='mb-4 font-display text-[26px] font-medium leading-none tracking-[0.01em] text-[#171714]'>Support</h3>
+          <ul className='space-y-2.5 font-sans text-sm leading-relaxed text-[#77746D]'>
             <li>
-              <Link to='#' className='transition-colors hover:text-[#414B36]'>
+              <Link to='/contact-us' className='transition-colors hover:text-[#414B36]'>
                 Contact Us
               </Link>
             </li>
             <li>
-              <Link to='#' className='transition-colors hover:text-[#414B36]'>
+              <Link to='/faq' className='transition-colors hover:text-[#414B36]'>
                 FAQs
               </Link>
             </li>
             <li>
-              <Link to='#' className='transition-colors hover:text-[#414B36]'>
+              <Link to='/features' className='transition-colors hover:text-[#414B36]'>
                 Features
               </Link>
+            </li>
+            <li>
+              <a href={`mailto:${SUPPORT_EMAIL}`} className='transition-colors hover:text-[#414B36]'>
+                {SUPPORT_EMAIL}
+              </a>
             </li>
           </ul>
         </div>
         <div>
-          <h3 className='mb-4 text-2xl text-[#171714]'>Follow Us</h3>
+          <h3 className='mb-4 font-display text-[26px] font-medium leading-none tracking-[0.01em] text-[#171714]'>Follow Us</h3>
           <div className='mb-6 flex items-center space-x-4'>
             <a href="https://www.facebook.com"
               target='_blank'
@@ -133,15 +139,15 @@ const Footer = () => {
               <RiTwitterXLine className='h-4 w-4' />
             </a>
           </div>
-          <p className='text-[#77746D]'>Call us</p>
-          <a href='tel:0123456789' className='transition-colors hover:text-[#414B36]'>
+          <p className='font-sans text-sm text-[#77746D]'>Call us</p>
+          <a href='tel:0123456789' className='font-sans text-sm transition-colors hover:text-[#414B36]'>
             <FiPhoneCall className='inline-block mr-2 '/>
             0123-456-789
           </a>
         </div>
       </div>
       <div className='mx-auto mt-12 max-w-[1440px] border-t border-[#D8D2C8] px-5 pt-6 lg:px-10'>
-        <p className='text-center text-sm tracking-tighter text-[#77746D]'>
+        <p className='font-sans text-center text-sm tracking-tight text-[#77746D]'>
           © 2026 MegaKart. All Rights Reserved
         </p>
       </div>

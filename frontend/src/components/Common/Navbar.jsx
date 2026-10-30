@@ -10,6 +10,7 @@ import CartDrawer from "../Layout/CartDrawer";
 import { IoMdClose } from "react-icons/io";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchFavorites } from "../../redux/slices/favoriteSlice";
+import { getCurrentRoute, getLoginUrl } from "../../utils/authRedirect";
 
 const navigationItems = [
   { label: "Home", to: "/" },
@@ -29,7 +30,9 @@ const Navbar = () => {
   const { user } = useSelector((state) => state.auth);
   const { products: favoriteProducts, status: favoritesStatus, error: favoritesError } =
     useSelector((state) => state.favorites);
-  const { pathname, search } = useLocation();
+  const location = useLocation();
+  const { pathname, search } = location;
+  const loginUrl = getLoginUrl(getCurrentRoute(location));
   const cartItemCount =
     cart?.products?.reduce((total, product) => total + product.quantity, 0) || 0;
   const gender = new URLSearchParams(search).get("gender")?.toLowerCase();
@@ -54,9 +57,9 @@ const Navbar = () => {
   return (
     <>
       <nav className="sticky top-0 z-40 border-b border-[#D8D2C8] bg-[#F0EDE7]">
-        <div className="mx-auto flex min-h-[76px] max-w-[1440px] items-center justify-between gap-6 px-5 py-3 lg:px-10">
+        <div className="mx-auto flex min-h-[76px] max-w-[1440px] items-center justify-between gap-3 px-2 py-3 sm:gap-6 sm:px-5 lg:gap-2 lg:px-10 xl:gap-6">
           <Link to="/" className="shrink-0 leading-none text-[#171714]">
-            <span className="block font-display text-[29px] uppercase tracking-[0.04em] sm:text-[32px]">
+            <span className="block font-display text-[25px] uppercase tracking-[0.04em] sm:text-[32px]">
               MegaKart
             </span>
             <span className="mt-1 block text-[8px] uppercase tracking-[0.32em] text-[#77746D]">
@@ -64,7 +67,7 @@ const Navbar = () => {
             </span>
           </Link>
 
-          <div className="hidden items-center gap-7 lg:flex">
+          <div className="hidden items-center gap-4 lg:flex xl:gap-7">
             {navigationItems.map(({ label, to }) => (
               <Link
                 key={label}
@@ -81,7 +84,7 @@ const Navbar = () => {
             ))}
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-3 lg:gap-5">
+          <div className="flex items-center gap-1 sm:gap-3 lg:gap-2 xl:gap-5">
             <div className="hidden lg:block">
               <SearchBar />
             </div>
@@ -109,8 +112,8 @@ const Navbar = () => {
                 aria-label={user ? `Go to your profile, ${user.name}` : "Sign in"}
                 aria-expanded={profileMenuOpen}
                 aria-haspopup="true"
-                onClick={() => navigate(user ? "/profile" : "/login")}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-[#171714] transition-opacity hover:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#414B36]"
+                onClick={() => navigate(user ? "/profile" : loginUrl)}
+                className="flex h-11 w-11 items-center justify-center rounded-full text-[#171714] transition-opacity hover:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#414B36]"
               >
                 {user?.profileImage ? (
                   <img
@@ -135,7 +138,7 @@ const Navbar = () => {
                       {user ? `Hello, ${user.name}` : "Your account"}
                     </p>
                     <Link
-                      to={user ? "/profile" : "/login"}
+                      to={user ? "/profile" : loginUrl}
                       onClick={() => setProfileMenuOpen(false)}
                       className="mt-1 inline-block text-xs font-semibold uppercase tracking-wide text-[#414B36] hover:text-[#A94F38]"
                     >
@@ -148,7 +151,7 @@ const Navbar = () => {
                         Favorite pieces
                       </p>
                       <Link
-                        to={user ? "/favorites" : "/login"}
+                        to={user ? "/favorites" : getLoginUrl("/favorites")}
                         onClick={() => setProfileMenuOpen(false)}
                         className="text-[10px] font-semibold uppercase tracking-wide text-[#A94F38] hover:underline"
                       >
@@ -210,7 +213,7 @@ const Navbar = () => {
               type="button"
               onClick={() => setDrawerOpen(true)}
               aria-label={`Open shopping bag${cartItemCount ? `, ${cartItemCount} items` : ""}`}
-              className="relative flex h-9 w-9 items-center justify-center text-[#171714] transition-colors hover:text-[#77746D]"
+              className="relative flex h-11 w-11 items-center justify-center text-[#171714] transition-colors hover:text-[#77746D]"
             >
               <HiOutlineShoppingBag className="h-[22px] w-[22px]" />
               {cartItemCount > 0 && (
@@ -227,7 +230,7 @@ const Navbar = () => {
               aria-label="Open navigation menu"
               aria-expanded={navDrawerOpen}
               onClick={() => setNavDrawerOpen(true)}
-              className="flex h-9 w-9 items-center justify-center text-[#171714] lg:hidden"
+              className="flex h-11 w-11 items-center justify-center text-[#171714] lg:hidden"
             >
               <HiBars3BottomRight className="h-6 w-6" />
             </button>
@@ -247,7 +250,7 @@ const Navbar = () => {
         onClick={closeNavDrawer}
       >
         <aside
-          className={`absolute right-0 top-0 h-full w-[min(82vw,360px)] bg-[#F5F2ED] p-6 shadow-xl transition-transform duration-300 ${
+          className={`absolute right-0 top-0 h-full w-[min(82vw,360px)] bg-[#F5F2ED] p-6 pb-[env(safe-area-inset-bottom)] shadow-xl transition-transform duration-300 ${
             navDrawerOpen ? "translate-x-0" : "translate-x-full"
           }`}
           onClick={(event) => event.stopPropagation()}
@@ -261,7 +264,7 @@ const Navbar = () => {
               type="button"
               onClick={closeNavDrawer}
               aria-label="Close navigation menu"
-              className="text-[#77746D]"
+              className="flex h-11 w-11 items-center justify-center text-[#77746D]"
             >
               <IoMdClose className="h-6 w-6" />
             </button>
@@ -272,7 +275,7 @@ const Navbar = () => {
                 key={label}
                 to={to}
                 onClick={closeNavDrawer}
-                className="block border-b border-[#D8D2C8] py-4 text-xs font-medium uppercase tracking-[0.12em] text-[#33342E]"
+                className="block min-h-11 border-b border-[#D8D2C8] py-4 text-xs font-medium uppercase tracking-[0.12em] text-[#33342E]"
               >
                 {label}
               </Link>
@@ -281,22 +284,22 @@ const Navbar = () => {
               <Link
                 to="/admin"
                 onClick={closeNavDrawer}
-                className="block border-b border-[#D8D2C8] py-4 text-xs font-semibold uppercase tracking-[0.12em] text-[#414B36]"
+                className="block min-h-11 border-b border-[#D8D2C8] py-4 text-xs font-semibold uppercase tracking-[0.12em] text-[#414B36]"
               >
                 Admin Panel
               </Link>
             )}
             <Link
-              to="/profile"
+              to={user ? "/profile" : getLoginUrl("/profile")}
               onClick={closeNavDrawer}
-              className="block border-b border-[#D8D2C8] py-4 text-xs font-medium uppercase tracking-[0.12em] text-[#33342E]"
+              className="block min-h-11 border-b border-[#D8D2C8] py-4 text-xs font-medium uppercase tracking-[0.12em] text-[#33342E]"
             >
               My Account
             </Link>
             <Link
-              to="/favorites"
+              to={user ? "/favorites" : getLoginUrl("/favorites")}
               onClick={closeNavDrawer}
-              className="block border-b border-[#D8D2C8] py-4 text-xs font-medium uppercase tracking-[0.12em] text-[#33342E]"
+              className="block min-h-11 border-b border-[#D8D2C8] py-4 text-xs font-medium uppercase tracking-[0.12em] text-[#33342E]"
             >
               My Favorites
             </Link>

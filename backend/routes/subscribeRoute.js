@@ -2,32 +2,43 @@ const express = require("express");
 
 const router = express.Router();
 const Subscriber = require("../models/Subscriber");
+const { sendNewsletterWelcomeEmail } = require("../utils/emailService");
 
 // @route POST /api/subscribe
 // @desc Handle newsletter subscription
 // @access Public
 
 router.post("/subscribe", async (req, res) => {
-  const { email } = req.body;
+  const email = typeof req.body?.email === "string"
+    ? req.body.email.trim().toLowerCase()
+    : "";
 
-  if (!email) {
-    return res.status(400).json({ message: "Email is required" });
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ message: "A valid email address is required." });
   }
 
   try {
-    // Check if the eamil is already subscribed
-    let subscriber = await Subscriber.findOne({ email });
+    const subscriber = await Subscriber.findOne({ email });
     if (subscriber) {
       return res.status(400).json({ message: "email is already subscribed" });
     }
 
-    // Create a new subscriber
-    subscriber = new Subscriber({ email });
-    await subscriber.save();
+    await Subscriber.create({ email });
 
-    res
-      .status(201)
-      .json({ message: "Successfully subscribed to the newsletter!" });
+    let welcomeEmailSent = false;
+    try {
+      await sendNewsletterWelcomeEmail(email);
+      welcomeEmailSent = true;
+    } catch (error) {
+      console.error(`Unable to send newsletter welcome email to ${email}:`, error);
+    }
+
+    res.status(201).json({
+      message: welcomeEmailSent
+        ? "Successfully subscribed to the newsletter!"
+        : "You are subscribed, but we could not send the welcome email.",
+      welcomeEmailSent,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });

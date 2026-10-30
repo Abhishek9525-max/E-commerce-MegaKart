@@ -1,17 +1,19 @@
 import React, { useEffect } from "react";
 import { HiHeart, HiOutlineHeart } from "react-icons/hi2";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   clearFavorites,
   fetchFavorites,
   toggleFavorite,
 } from "../../redux/slices/favoriteSlice";
+import { getCurrentRoute, getLoginUrl } from "../../utils/authRedirect";
 
 const FavoriteButton = ({ product, className = "" }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useSelector((state) => state.auth);
   const { productIds, pendingProductIds, status } = useSelector(
     (state) => state.favorites
@@ -34,7 +36,7 @@ const FavoriteButton = ({ product, className = "" }) => {
 
     if (!user) {
       toast.info("Sign in to save your favorites.");
-      navigate("/login");
+      navigate(getLoginUrl(getCurrentRoute(location)));
       return;
     }
     if (isPending) return;

@@ -35,24 +35,24 @@ const CartContents = ({ cart, userId, guestId }) => {
       {cart.products.map((product, index) => (
         <div
           key={index}
-          className="flex items-start justify-between border-b border-[#EAE6DF] py-5"
+          className="flex items-start justify-between gap-3 border-b border-[#EAE6DF] py-5"
         >
-          <div className="flex items-start">
-            <div className="mr-4 h-24 w-20 shrink-0 overflow-hidden rounded bg-[#EAE4D9]">
+          <div className="flex min-w-0 items-start">
+            <div className="mr-3 h-24 w-20 shrink-0 overflow-hidden rounded bg-[#EAE4D9] sm:mr-4">
               <img
                 src={product.image}
                 alt={product.name}
                 className="h-full w-full object-cover"
               />
             </div>
-            <div>
-              <h3 className="font-display text-xl font-semibold text-[#171714]">
+            <div className="min-w-0">
+              <h3 className="break-words font-display text-base font-semibold leading-snug text-[#171714] sm:text-xl">
                 {product.name}
               </h3>
               <p className="font-sans text-xs font-light uppercase tracking-wide text-gray-500">
                 SIZE: {product.size} | COLOR: {product.color}
               </p>
-              <div className="mt-3 inline-flex h-9 items-center justify-between gap-1 rounded-md border border-[#D8D2C8] bg-white px-1 shadow-[0_1px_3px_rgba(23,23,20,0.06)]">
+              <div className="mt-3 inline-flex h-11 items-center justify-between gap-1 rounded-md border border-[#D8D2C8] bg-white px-1 shadow-[0_1px_3px_rgba(23,23,20,0.06)]">
                 <button
                   type="button"
                   onClick={() =>
@@ -65,7 +65,7 @@ const CartContents = ({ cart, userId, guestId }) => {
                     )
                   }
                   aria-label={`Decrease quantity of ${product.name}`}
-                  className="flex h-7 w-7 items-center justify-center text-lg text-[#77746D] transition-colors hover:text-[#171714]"
+                  className="flex h-10 w-10 items-center justify-center text-lg text-[#77746D] transition-colors hover:text-[#171714]"
                 >
                   −
                 </button>
@@ -84,14 +84,14 @@ const CartContents = ({ cart, userId, guestId }) => {
                     )
                   }
                   aria-label={`Increase quantity of ${product.name}`}
-                  className="flex h-7 w-7 items-center justify-center text-lg text-[#77746D] transition-colors hover:text-[#171714]"
+                  className="flex h-10 w-10 items-center justify-center text-lg text-[#77746D] transition-colors hover:text-[#171714]"
                 >
                   +
                 </button>
               </div>
             </div>
           </div>
-          <div>
+          <div className="shrink-0 text-right">
             <p className="font-sans">${Number(product.price).toFixed(2)}</p>
             {Number(product.originalPrice) > Number(product.price) && (
               <p className="mt-1 font-sans text-xs text-[#99958c] line-through">
@@ -107,7 +107,7 @@ const CartContents = ({ cart, userId, guestId }) => {
                   product.color
                 )
               }
-              className="mt-2 inline-flex items-center gap-1.5 font-sans text-sm text-[#A94F38] underline underline-offset-2 transition-colors hover:text-[#803A2A]"
+              className="mt-2 inline-flex min-h-11 items-center gap-1.5 font-sans text-sm text-[#A94F38] underline underline-offset-2 transition-colors hover:text-[#803A2A]"
             >
               <RiDeleteBin3Line className="h-4 w-4" />
               Remove

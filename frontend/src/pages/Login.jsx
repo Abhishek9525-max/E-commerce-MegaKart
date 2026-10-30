@@ -6,6 +6,7 @@ import login from "../assets/login.webp";
 import { loginUser } from "../redux/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { mergeCart } from "../redux/slices/cartSlice";
+import { getPostAuthDestination } from "../utils/authRedirect";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -18,20 +19,21 @@ const Login = () => {
   const { user, guestId, loading } = useSelector((state) => state.auth);
   const { cart } = useSelector((state) => state.cart);
 
-  const redirect = new URLSearchParams(location.search).get("redirect") || "/";
-  const isCheckoutRedirect = redirect.includes("checkout");
+  const redirect = getPostAuthDestination(
+    new URLSearchParams(location.search).get("redirect")
+  );
 
   useEffect(() => {
     if (user) {
       if (cart?.products.length > 0 && guestId) {
         dispatch(mergeCart({ guestId, user })).then(() => {
-          navigate(isCheckoutRedirect ? "/checkout" : "/");
+          navigate(redirect);
         });
       } else {
-        navigate(isCheckoutRedirect ? "/checkout" : "/");
+        navigate(redirect);
       }
     }
-  }, [user, guestId, cart, navigate, isCheckoutRedirect, dispatch]);
+  }, [user, guestId, cart, navigate, redirect, dispatch]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -111,6 +113,14 @@ const Login = () => {
           >
             {loading ? "Signing in..." : "Sign in"}
           </button>
+          <div className="mt-4 text-center">
+            <Link
+              to={`/forgot-password?redirect=${encodeURIComponent(redirect)}`}
+              className="text-sm font-medium text-[#414B36] underline underline-offset-4 hover:text-[#A94F38]"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <p className="mt-7 text-center text-sm text-[#77746D]">
             New to MegaKart?{" "}
             <Link

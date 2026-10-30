@@ -17,6 +17,13 @@ const {
   issueRegistrationOtp,
   verifyRegistrationOtp,
 } = require("../utils/registrationOtp");
+const {
+  PasswordResetOtpCooldownError,
+  clearPasswordResetOtp,
+  issuePasswordResetOtp,
+  verifyPasswordResetOtp,
+} = require("../utils/passwordResetOtp");
+const { sendPasswordResetEmail, sendWelcomeEmail } = require("../utils/emailService");
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
 const streamifier = require("streamifier");
@@ -166,7 +173,14 @@ router.post("/register/verify-otp", async (req, res) => {
     });
     await user.save();
     await startSession(user, res);
-    res.status(201).json({ user: userResponse(user) });
+    let welcomeEmailSent = false;
+    try {
+      await sendWelcomeEmail(user);
+      welcomeEmailSent = true;
+    } catch (error) {
+      console.error(`Unable to send welcome email for user ${user._id}:`, error);
+    }
+    res.status(201).json({ user: userResponse(user), welcomeEmailSent });
   } catch (error) {
     if (error.code === 11000 && error.keyPattern?.email) {
       return res.status(400).json({ message: "An account with this email already exists." });
@@ -174,6 +188,117 @@ router.post("/register/verify-otp", async (req, res) => {
     console.error("Unable to verify registration code:", error);
     res.status(503).json({
       message: "Unable to complete registration right now. Please try again later.",
+    });
+  }
+});
+
+// @route POST /api/users/forgot-password
+// @desc Send a password reset code when the account exists
+// @access Public
+router.post("/forgot-password", async (req, res) => {
+  const email =
+    typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ message: "Please enter a valid email address." });
+  }
+
+  let otp;
+  try {
+    const user = await User.findOne({ email }).collation({
+      locale: "en",
+      strength: 2,
+    });
+    if (!user) {
+      return res.json({
+        message: "If an account exists for that email, a reset code has been sent.",
+      });
+    }
+
+    otp = await issuePasswordResetOtp(email);
+    await sendPasswordResetEmail(user, otp);
+
+    return res.json({
+      message: "If an account exists for that email, a reset code has been sent.",
+    });
+  } catch (error) {
+    if (otp) {
+      try {
+        await clearPasswordResetOtp(email);
+      } catch (cleanupError) {
+        console.error("Unable to clear failed password reset OTP state:", cleanupError);
+      }
+    }
+    if (error instanceof PasswordResetOtpCooldownError) {
+      return res.json({
+        message: "If an account exists for that email, a reset code has been sent.",
+      });
+    }
+    console.error("Unable to send password reset code:", error);
+    return res.status(503).json({
+      message: "Unable to send a password reset code right now. Please try again later.",
+    });
+  }
+});
+
+// @route POST /api/users/forgot-password/reset
+// @desc Verify a password reset code and set a new password
+// @access Public
+router.post("/forgot-password/reset", async (req, res) => {
+  const requestBody = req.body ?? {};
+  const email =
+    typeof requestBody.email === "string"
+      ? requestBody.email.trim().toLowerCase()
+      : "";
+  const otp = typeof requestBody.otp === "string" ? requestBody.otp.trim() : "";
+  const password =
+    typeof requestBody.password === "string" ? requestBody.password : "";
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ message: "Please enter a valid email address." });
+  }
+  if (!/^\d{6}$/.test(otp)) {
+    return res.status(400).json({ message: "Enter the 6-digit reset code." });
+  }
+  if (
+    password.length < 8 ||
+    !/[A-Z]/.test(password) ||
+    !/[a-z]/.test(password) ||
+    !/\d/.test(password)
+  ) {
+    return res.status(400).json({
+      message:
+        "Use at least 8 characters, including an uppercase letter, a lowercase letter, and a number.",
+    });
+  }
+
+  try {
+    const user = await User.findOne({ email })
+      .collation({ locale: "en", strength: 2 })
+      .select("+sessionVersion");
+    const otpResult = await verifyPasswordResetOtp(email, otp);
+
+    if (otpResult === "locked") {
+      return res.status(429).json({
+        message: "Too many incorrect codes. Request a new reset code.",
+      });
+    }
+    if (otpResult !== "verified" || !user) {
+      return res.status(400).json({
+        message: "The reset code is incorrect or expired. Request a new code.",
+      });
+    }
+
+    user.password = password;
+    user.sessionVersion = (user.sessionVersion || 0) + 1;
+    user.refreshTokenHash = undefined;
+    await user.save();
+    clearAuthCookies(res);
+
+    return res.json({ message: "Your password has been reset. You can now sign in." });
+  } catch (error) {
+    console.error("Unable to reset password:", error);
+    return res.status(503).json({
+      message: "Unable to reset your password right now. Please try again later.",
     });
   }
 });
@@ -188,7 +313,9 @@ router.post('/login', async(req,res)=>{
 
   try{
     //find the user by email
-    const user = await User.findOne({ email: normalizedEmail })
+    const user = await User.findOne({ email: normalizedEmail }).select(
+      "+sessionVersion"
+    );
 
     if(!user) return res.status(400).json({message: 'Invalid Credentials'});
     const isMatch = await user.matchPassword(password);
@@ -219,9 +346,15 @@ router.post("/auth/refresh", async (req, res) => {
     }
 
     const oldHash = hashRefreshToken(refreshToken);
-    const user = await User.findById(decoded.user.id).select("+refreshTokenHash");
+    const user = await User.findById(decoded.user.id).select(
+      "+refreshTokenHash +sessionVersion"
+    );
 
-    if (!user || !hashesMatch(user.refreshTokenHash, oldHash)) {
+    if (
+      !user ||
+      (decoded.user.authVersion || 0) !== (user.sessionVersion || 0) ||
+      !hashesMatch(user.refreshTokenHash, oldHash)
+    ) {
       clearAuthCookies(res);
       return res.status(401).json({ message: "Refresh session expired or revoked." });
     }
@@ -279,9 +412,64 @@ router.post("/auth/logout", async (req, res) => {
 // @access Private
 
 router.get('/profile', protect, async(req,res)=>{
-  res.json(req.user);
+  res.json(userResponse(req.user));
 
 });
+
+// @route PUT /api/users/profile/password
+// @desc Change the authenticated user's password
+// @access Private
+router.put("/profile/password", protect, async (req, res) => {
+  const currentPassword =
+    typeof req.body?.currentPassword === "string" ? req.body.currentPassword : "";
+  const newPassword =
+    typeof req.body?.newPassword === "string" ? req.body.newPassword : "";
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({
+      message: "Current password and new password are required.",
+    });
+  }
+  if (
+    newPassword.length < 8 ||
+    !/[A-Z]/.test(newPassword) ||
+    !/[a-z]/.test(newPassword) ||
+    !/\d/.test(newPassword)
+  ) {
+    return res.status(400).json({
+      message:
+        "Use at least 8 characters, including an uppercase letter, a lowercase letter, and a number.",
+    });
+  }
+
+  try {
+    const user = await User.findById(req.user._id).select("+sessionVersion");
+    if (!user) {
+      return res.status(404).json({ message: "User account not found." });
+    }
+
+    if (!(await user.matchPassword(currentPassword))) {
+      return res.status(400).json({ message: "Your current password is incorrect." });
+    }
+    if (await user.matchPassword(newPassword)) {
+      return res.status(400).json({
+        message: "Your new password must be different from your current password.",
+      });
+    }
+
+    user.password = newPassword;
+    user.sessionVersion = (user.sessionVersion || 0) + 1;
+    await startSession(user, res);
+
+    return res.json({
+      message: "Your password has been changed. Other active sessions were signed out.",
+    });
+  } catch (error) {
+    console.error("Unable to change account password:", error);
+    return res.status(500).json({ message: "Unable to change your password." });
+  }
+});
+
 
 // @route PUT /api/users/profile/image
 // @desc Upload and save the authenticated user's profile image

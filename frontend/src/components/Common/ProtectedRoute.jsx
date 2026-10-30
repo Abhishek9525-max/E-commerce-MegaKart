@@ -1,13 +1,18 @@
 import React from 'react'
 import { useSelector } from 'react-redux'
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
+import { getCurrentRoute, getLoginUrl } from '../../utils/authRedirect';
 
 
 const ProtectedRoute = ({children , role}) => {
 
   const {user} = useSelector((state)=> state.auth);
+  const location = useLocation();
 
-  if(!user || (role && user.role !== role)){
+  if (!user) {
+    return <Navigate to={getLoginUrl(getCurrentRoute(location))} replace />;
+  }
+  if (role && user.role !== role) {
     return <Navigate to='/login' replace />
   }
   return children;

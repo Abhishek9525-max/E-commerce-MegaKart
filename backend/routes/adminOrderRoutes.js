@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const Order = require("../models/Order");
 const User = require("../models/User");
 const { protect, admin } = require("../middleware/authMiddleware");
+const { sendOrderStatusEmail } = require("../utils/emailService");
 
 const router = express.Router();
 const ORDERS_PER_PAGE = 10;
@@ -95,16 +96,38 @@ router.get("/", protect, admin, async (req, res) => {
 // @access Private/Admin
 router.put("/:id", protect, admin, async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id).populate("user", "name")
+    const order = await Order.findById(req.params.id).populate("user", "name email")
     if (order) {
-      order.status = req.body.status || order.status;
+      const previousStatus = order.status;
+      const requestedStatus = req.body.status;
+      if (requestedStatus && !["Processing", "Shipped", "Delivered", "Cancelled"].includes(requestedStatus)) {
+        return res.status(400).json({ message: "Invalid order status." });
+      }
+      order.status = requestedStatus || order.status;
       order.isDelivered =
         req.body.status === "Delivered" ? true : order.isDelivered;
       order.deliveredAt =
         req.body.status === "Delivered" ? Date.now() : order.deliveredAt;
 
-        const updatedOrder = await order.save() 
-        res.json(updatedOrder)
+        const updatedOrder = await order.save()
+        let emailNotificationSent = null;
+        if (previousStatus !== updatedOrder.status &&
+            ["Shipped", "Delivered", "Cancelled"].includes(updatedOrder.status)) {
+          emailNotificationSent = false;
+          try {
+            if (!updatedOrder.user?.email) {
+              throw new Error("Customer email address is unavailable.");
+            }
+            await sendOrderStatusEmail(updatedOrder, updatedOrder.user, updatedOrder.status);
+            emailNotificationSent = true;
+          } catch (error) {
+            console.error(
+              `Unable to send ${updatedOrder.status.toLowerCase()} email for order ${updatedOrder._id}:`,
+              error
+            );
+          }
+        }
+        res.json({ ...updatedOrder.toObject(), emailNotificationSent });
     }else{
       res.status(404).json({message: "Order not found"})
     }

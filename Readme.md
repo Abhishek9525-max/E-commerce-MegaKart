@@ -32,13 +32,18 @@ Authentication uses short-lived access cookies and rotating refresh cookies. Bot
 - `COOKIE_SAME_SITE=none` and `COOKIE_SECURE=true` when the frontend and API are on different sites. For same-site deployments, `lax` may be used.
 - `COOKIE_DOMAIN` only when cookies need to be shared across subdomains.
 - `REDIS_URL`: Redis connection URL used for short-lived registration verification codes.
-- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASS`: SMTP connection settings used to deliver registration codes.
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASS`: SMTP connection settings used to deliver transactional emails.
 - `SMTP_SECURE=true` when the SMTP server requires implicit TLS (typically port 465); otherwise use `false` (typically port 587).
-- `SMTP_FROM` (optional): sender address shown on registration verification emails; defaults to `SMTP_USER`.
+- `SMTP_FROM` (optional): sender address shown on transactional emails; defaults to `SMTP_USER`.
+- `ADMIN_NOTIFICATION_EMAIL`: recipient for new-order notification emails.
 
 Local development allows `http://localhost:5173` and `http://127.0.0.1:5173` by default. The frontend `VITE_BACKEND_URL` must point to the API origin. After switching from bearer tokens, users must sign in again to establish cookie sessions.
 
 New customer registration requires an email verification code. Codes are stored in Redis for 10 minutes, can be requested once per minute, and are limited to five verification attempts.
+
+MegaKart sends branded HTML and plain-text emails for registration verification, a welcome message after account creation and newsletter subscription, paid order confirmation (including payment receipt details), shipment, delivery, cancellation, and new-order alerts. Customer and admin delivery outcomes are logged if SMTP delivery fails; account, subscription, order, and fulfillment updates remain saved. Shipment emails currently note that tracking details will be shared when available because tracking numbers are not yet collected by the order workflow. Configure the SMTP variables above and `ADMIN_NOTIFICATION_EMAIL` to enable delivery.
+
+Password resets use a six-digit email code stored as a digest in Redis. Codes expire after 10 minutes, can be requested once per minute, and allow five verification attempts. Password reset revokes all existing sessions; changing a password from My Account keeps the current session active while signing out other sessions. Refund-processing and Google sign-in notification emails are not available until those workflows exist.
 
 ## Product reviews
 

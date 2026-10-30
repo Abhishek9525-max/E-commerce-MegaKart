@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import ProductGrid from "../components/Products/ProductGrid";
 import { fetchFavorites } from "../redux/slices/favoriteSlice";
+import { getLoginUrl } from "../utils/authRedirect";
 
 const FavoritesPage = () => {
   const dispatch = useDispatch();
@@ -12,7 +13,7 @@ const FavoritesPage = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate("/login");
+      navigate(getLoginUrl("/favorites"));
       return;
     }
     dispatch(fetchFavorites(user._id));

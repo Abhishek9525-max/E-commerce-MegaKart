@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { FiStar } from "react-icons/fi";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { getCurrentRoute, getLoginUrl } from "../../utils/authRedirect";
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || "";
 
@@ -42,6 +43,7 @@ const RatingStars = ({ rating, interactive = false, onChange, label }) => (
 );
 
 const ProductReviews = ({ productId }) => {
+  const location = useLocation();
   const { user } = useSelector((state) => state.auth);
   const [reviews, setReviews] = useState([]);
   const [summary, setSummary] = useState({ rating: 0, numReviews: 0, totalPages: 1 });
@@ -267,7 +269,10 @@ const ProductReviews = ({ productId }) => {
           </h3>
           {!user ? (
             <p className="mt-3 text-sm leading-6 text-[#77746D]">
-              <Link to="/login" className="font-semibold text-[#414B36] underline">
+              <Link
+                to={getLoginUrl(getCurrentRoute(location))}
+                className="font-semibold text-[#414B36] underline"
+              >
                 Sign in
               </Link>{" "}
               to check your purchase eligibility and write a review.

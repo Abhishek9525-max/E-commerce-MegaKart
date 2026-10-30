@@ -9,6 +9,7 @@ import {
 } from "../redux/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { mergeCart } from "../redux/slices/cartSlice";
+import { getPostAuthDestination } from "../utils/authRedirect";
 
 const passwordRequirements = [
   { label: "At least 8 characters", test: (password) => password.length >= 8 },
@@ -31,8 +32,9 @@ const Register = () => {
   const { user, guestId, loading } = useSelector((state) => state.auth);
   const { cart } = useSelector((state) => state.cart);
 
-  const redirect = new URLSearchParams(location.search).get("redirect") || "/";
-  const isCheckoutRedirect = redirect.includes("checkout");
+  const redirect = getPostAuthDestination(
+    new URLSearchParams(location.search).get("redirect")
+  );
   const passwordChecks = passwordRequirements.map(({ label, test }) => ({
     label,
     passed: test(password),
@@ -43,13 +45,13 @@ const Register = () => {
     if (user) {
       if (cart?.products.length > 0 && guestId) {
         dispatch(mergeCart({ guestId, user })).then(() => {
-          navigate(isCheckoutRedirect ? "/checkout" : "/");
+          navigate(redirect);
         });
       } else {
-        navigate(isCheckoutRedirect ? "/checkout" : "/");
+        navigate(redirect);
       }
     }
-  }, [user, guestId, cart, navigate, isCheckoutRedirect, dispatch]);
+  }, [user, guestId, cart, navigate, redirect, dispatch]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -72,7 +74,7 @@ const Register = () => {
         return;
       }
 
-      await dispatch(
+      const registration = await dispatch(
         registerUser({
           name: name.trim(),
           email: email.trim(),
@@ -80,7 +82,11 @@ const Register = () => {
           otp: otp.trim(),
         })
       ).unwrap();
-      toast.success("Your email is verified. Welcome to MegaKart.");
+      if (registration.welcomeEmailSent === false) {
+        toast.warning("Your account is ready, but we could not send the welcome email.");
+      } else {
+        toast.success("Your email is verified. Welcome to MegaKart.");
+      }
     } catch (error) {
       toast.error(error?.message || "Unable to complete registration. Please try again.");
     }

@@ -15,9 +15,13 @@ const protect = async (req, res, next) => {
       return res.status(401).json({ message: "Invalid authentication session." });
     }
 
-    req.user = await User.findById(decoded.user.id).select("-password");
+    req.user = await User.findById(decoded.user.id)
+      .select("-password +sessionVersion");
     if (!req.user) {
       return res.status(401).json({ message: "User account no longer exists." });
+    }
+    if ((decoded.user.authVersion || 0) !== (req.user.sessionVersion || 0)) {
+      return res.status(401).json({ message: "Authentication session has been revoked." });
     }
     return next();
   } catch (error) {

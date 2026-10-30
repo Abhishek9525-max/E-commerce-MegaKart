@@ -5,6 +5,10 @@ const Product = require("../models/Product");
 const Order = require("../models/Order");
 const { protect } = require("../middleware/authMiddleware");
 const mongoose = require("mongoose");
+const {
+  sendAdminNewOrderEmail,
+  sendOrderConfirmationEmail,
+} = require("../utils/emailService");
 
 const router = express.Router();
 
@@ -240,7 +244,31 @@ router.post("/:id/finalize", protect, async (req, res) => {
       await Cart.deleteOne({ user: checkout.user }, { session });
     });
 
-    res.status(201).json(finalOrder);
+    const user = req.user;
+    const emailNotifications = { customer: false, admin: false };
+
+    if (!user) {
+      console.error(`Unable to send order emails: customer for order ${finalOrder._id} was not found.`);
+    } else {
+      try {
+        await sendOrderConfirmationEmail(finalOrder, user);
+        emailNotifications.customer = true;
+      } catch (error) {
+        console.error(`Unable to send order confirmation for ${finalOrder._id}:`, error);
+      }
+
+      try {
+        await sendAdminNewOrderEmail(finalOrder, user);
+        emailNotifications.admin = true;
+      } catch (error) {
+        console.error(`Unable to send admin new-order alert for ${finalOrder._id}:`, error);
+      }
+    }
+
+    res.status(201).json({
+      ...finalOrder.toObject(),
+      emailNotifications,
+    });
   } catch (error) {
     if (error.code === "INSUFFICIENT_STOCK") {
       return res.status(409).json({ message: error.message });

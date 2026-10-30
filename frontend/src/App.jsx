@@ -14,6 +14,10 @@ import Checkout from "./components/Cart/Checkout";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import OrderDetailsPage from "./pages/OrderDetailsPage";
 import MyOrdersPage from "./pages/MyOrdersPage";
+import ContactUsPage from "./pages/ContactUsPage";
+import FaqPage from "./pages/FaqPage";
+import FeaturesPage from "./pages/FeaturesPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import AdminLayout from "./components/Admin/AdminLayout";
 import AdminHomePage from "./pages/AdminHomePage";
 import UserManagement from "./components/Admin/UserManagement";
@@ -97,6 +101,7 @@ function App() {
             <Route index element={<Home />} />
             <Route path="new-arrivals" element={<NewArrivalsPage />} />
             <Route path="login" element={<Login />} />
+            <Route path="forgot-password" element={<ForgotPasswordPage />} />
             <Route path="register" element={<Register />} />
             <Route path="profile" element={<Profile />} />
             <Route path="favorites" element={<FavoritesPage />} />
@@ -109,6 +114,9 @@ function App() {
             />
             <Route path="order/:id" element={<OrderDetailsPage />} />
             <Route path="my-orders" element={<MyOrdersPage />} />
+            <Route path="contact-us" element={<ContactUsPage />} />
+            <Route path="faq" element={<FaqPage />} />
+            <Route path="features" element={<FeaturesPage />} />
           </Route>
           {/* Admin Layout  */}
 

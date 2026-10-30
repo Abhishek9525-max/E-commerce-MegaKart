@@ -2,8 +2,11 @@ import React from "react";
 import { HiArrowRight } from "react-icons/hi2";
 import heroImg from "../../assets/rabbit-hero.webp";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const Hero = () => {
+  const { user } = useSelector((state) => state.auth);
+
   return (
     <section className="relative isolate flex min-h-[500px] items-center justify-center overflow-hidden sm:min-h-[560px] lg:min-h-[min(72vh,680px)]">
       <img
@@ -39,6 +42,24 @@ const Hero = () => {
             View Best Seller
           </a>
         </div>
+        {!user && (
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm text-white/85">
+            <span>Already have an account?</span>
+            <Link
+              to="/login"
+              className="inline-flex min-h-11 items-center font-semibold text-white underline underline-offset-4 transition-colors hover:text-white/75"
+            >
+              Sign in
+            </Link>
+            <span aria-hidden="true" className="text-white/55">·</span>
+            <Link
+              to="/register"
+              className="inline-flex min-h-11 items-center font-semibold text-white underline underline-offset-4 transition-colors hover:text-white/75"
+            >
+              Create an account
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );

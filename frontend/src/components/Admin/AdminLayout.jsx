@@ -18,6 +18,7 @@ const AdminLayout = () => {
           onClick={toggleSidebar}
           aria-label={isSidebarOpen ? "Close admin navigation" : "Open admin navigation"}
           aria-expanded={isSidebarOpen}
+          className="flex h-11 w-11 items-center justify-center"
         >
           {isSidebarOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
         </button>
@@ -33,7 +34,7 @@ const AdminLayout = () => {
       )}
 
       <div
-        className={`fixed inset-y-0 left-0 z-30 w-[300px] overflow-y-auto border-r border-[#e8e5de] bg-white transition-transform duration-300 md:static md:z-auto md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-30 w-[min(90vw,300px)] overflow-y-auto border-r border-[#e8e5de] bg-white transition-transform duration-300 md:static md:z-auto md:translate-x-0 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
