@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Hero from "../components/Layout/Hero";
+import TrustBar from "../components/Layout/TrustBar";
 import GenderCollectionSection from "../components/Products/GenderCollectionSection";
 import NewArrivals from "../components/Products/NewArrivals";
 import ProductDetails from "../components/Products/ProductDetails";
@@ -40,6 +41,7 @@ const Home = () => {
   return (
     <div>
       <Hero />
+      <TrustBar />
       <GenderCollectionSection />
       <NewArrivals />
 
@@ -49,7 +51,7 @@ const Home = () => {
           <h2 className="text-4xl sm:text-5xl">Best Seller</h2>
         </div>
         {bestSellerProduct ? (
-          <ProductDetails productId={bestSellerProduct._id} />
+          <ProductDetails productId={bestSellerProduct._id} showReviews={false} />
         ) : (
           <p className="text-center text-sm text-[#77746D]">
             Loading best seller product...

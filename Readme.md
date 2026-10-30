@@ -40,6 +40,22 @@ Local development allows `http://localhost:5173` and `http://127.0.0.1:5173` by 
 
 New customer registration requires an email verification code. Codes are stored in Redis for 10 minutes, can be requested once per minute, and are limited to five verification attempts.
 
+## Product reviews
+
+Authenticated customers can review a product only when one of their orders containing that product has `status: "Delivered"`. Reviews are unique per customer and product, can be edited by their author, and are moderated from the product's admin edit view. Product pages display paginated reviews and their calculated average rating.
+
+The review collection uses a unique compound index on `{ user: 1, product: 1 }` and a `{ product: 1, createdAt: -1 }` query index. Run the review index migration before deploying the review API to a database that may contain old indexes. It inspects review documents and indexes, preserves reviews, detects duplicate pairs without deleting them, removes only indexes containing obsolete `userId`/`productId` keys or redundant copies of the canonical unique constraint, and creates/verifies the intended indexes. It is dry-run by default:
+
+```powershell
+cd backend
+npm run migrate:review-indexes
+npm run migrate:review-indexes:apply
+```
+
+Back up the database before applying the migration. The migration also reconciles each product's `rating` and `numReviews` from its review documents, clearing seeded placeholder metrics where no reviews exist. If duplicate `(user, product)` reviews exist or a document has invalid/conflicting references or an invalid rating, migration stops before changing indexes, reviews, or product metrics; resolve the records manually without deleting valid reviews, then rerun. For a database without legacy references, Mongoose declares the same indexes, but production deployments should still run this explicit migration because Mongoose does not remove obsolete indexes.
+
+The backend integration test uses Node's built-in test runner and an isolated MongoDB database whose name contains `test`. Set `TEST_MONGO_URL` to that database and run `npm test` from `backend/`.
+
 ---
 
 ## 📂 Project Structure  

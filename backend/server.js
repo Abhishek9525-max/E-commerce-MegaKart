@@ -17,6 +17,8 @@ const productAdminRoutes = require("./routes/productAdminRoutes");
 const adminOrderRoutes = require("./routes/adminOrderRoutes");
 const adminAnalyticsRoutes = require("./routes/adminAnalyticsRoutes");
 const favoriteRoutes = require("./routes/favoriteRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
+const adminReviewRoutes = require("./routes/adminReviewRoutes");
 const cookieParser = require("./middleware/cookieMiddleware");
 const {
   configuredOrigins,
@@ -53,6 +55,7 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/favorites", favoriteRoutes);
+app.use("/api/reviews", reviewRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api", subscribeRoutes);
 
@@ -61,6 +64,7 @@ app.use("/api", subscribeRoutes);
 
 app.use("/api/admin/users", adminRoutes);
 app.use("/api/admin/products", productAdminRoutes);
+app.use("/api/admin/reviews", adminReviewRoutes);
 app.use("/api/admin/orders", adminOrderRoutes);
 app.use("/api/admin/analytics", adminAnalyticsRoutes);
 

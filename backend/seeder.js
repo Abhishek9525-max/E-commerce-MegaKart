@@ -32,7 +32,13 @@ const seedData = async () => {
     const userID = createdUser._id;
 
     const sampleProducts = products.map((product) => {
-      return { ...product, isPublished: true, user: userID };
+      return {
+        ...product,
+        rating: 0,
+        numReviews: 0,
+        isPublished: true,
+        user: userID,
+      };
     });
 
     // Insert the products into the databse

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { HiArrowLeft, HiArrowRight, HiOutlineShoppingBag } from "react-icons/hi2";
+import { FiStar } from "react-icons/fi";
 import { toast } from "sonner";
 import ProductGrid from "./ProductGrid";
 import { useParams } from "react-router-dom";
@@ -12,8 +13,13 @@ import { addToCart } from "../../redux/slices/cartSlice";
 import { getProductPricing } from "../../utils/productPricing";
 import { getColorSwatchValue } from "../../utils/colorSwatches";
 import FavoriteButton from "./FavoriteButton";
+import ProductReviews from "./ProductReviews";
 
-const ProductDetails = ({ productId, showSimilarProducts = true }) => {
+const ProductDetails = ({
+  productId,
+  showSimilarProducts = true,
+  showReviews = true,
+}) => {
   const { id } = useParams();
   const dispatch = useDispatch();
   const { selectedProduct, loading, error, similarProducts } = useSelector(
@@ -206,6 +212,25 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
               />
             </div>
 
+            {Number(selectedProduct.numReviews) > 0 && (
+              <p
+                aria-label={`${(Number(selectedProduct.rating) || 0).toFixed(1)} out of 5 stars from ${selectedProduct.numReviews} reviews`}
+                className="mt-3 flex items-center gap-1.5 text-xs text-[#77746D]"
+              >
+                <FiStar
+                  aria-hidden="true"
+                  className="h-4 w-4 fill-[#b7792b] text-[#b7792b]"
+                />
+                <span className="font-medium text-[#414B36]">
+                  {(Number(selectedProduct.rating) || 0).toFixed(1)}
+                </span>
+                <span>
+                  ({selectedProduct.numReviews}{" "}
+                  {Number(selectedProduct.numReviews) === 1 ? "review" : "reviews"})
+                </span>
+              </p>
+            )}
+
             <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span className="text-xl font-semibold text-[#171714]">
                 ${Number(currentPrice).toFixed(2)}
@@ -339,6 +364,8 @@ const ProductDetails = ({ productId, showSimilarProducts = true }) => {
           </div>
         </div>
       </article>
+
+      {showReviews && <ProductReviews productId={productFetchId} />}
 
       {showSimilarProducts && (
         <section className="mx-auto mt-16 max-w-7xl">

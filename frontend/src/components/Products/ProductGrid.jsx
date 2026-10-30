@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { FiStar } from "react-icons/fi";
 import { getProductPricing } from "../../utils/productPricing";
 import FavoriteButton from "./FavoriteButton";
 
@@ -58,6 +59,20 @@ const ProductGrid = ({ products, loading, error }) => {
                     </span>
                   )}
                 </p>
+                {Number(product.numReviews) > 0 && (
+                  <p
+                    aria-label={`${(Number(product.rating) || 0).toFixed(1)} out of 5 stars from ${product.numReviews} reviews`}
+                    className="mt-2 flex items-center gap-1.5 text-xs text-[#77746D]"
+                  >
+                    <FiStar aria-hidden="true" className="h-3.5 w-3.5 fill-[#b7792b] text-[#b7792b]" />
+                    <span className="font-medium text-[#414B36]">
+                      {(Number(product.rating) || 0).toFixed(1)}
+                    </span>
+                    <span>
+                      ({product.numReviews} {Number(product.numReviews) === 1 ? "review" : "reviews"})
+                    </span>
+                  </p>
+                )}
               </Link>
           </article>
         );

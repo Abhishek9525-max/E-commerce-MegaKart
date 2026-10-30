@@ -8,13 +8,17 @@ import axios from "axios";
 // Fetch all orders(admin only)
 export const fetchAllOrders = createAsyncThunk(
   "adminOrders/fetchAllOrders",
-  async (_, { rejectWithValue }) => {
+  async ({ page = 1, search = "" } = {}, { rejectWithValue, signal }) => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/admin/orders`);
+        `${import.meta.env.VITE_BACKEND_URL}/api/admin/orders`,
+        { params: { page, search }, signal }
+      );
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(
+        error.response?.data ?? { message: "Unable to load orders." }
+      );
     }
   }
 );
@@ -54,6 +58,11 @@ const adminOrderSlice = createSlice({
     orders: [],
     totalOrders: 0,
     totalSales: 0,
+    currentPage: 1,
+    totalPages: 0,
+    totalFilteredOrders: 0,
+    currentSearch: "",
+    currentRequestId: null,
     loading: false,
     error: null,
   },
@@ -61,30 +70,35 @@ const adminOrderSlice = createSlice({
   extraReducers: (builder) => {
     builder
       // Fetch all orders
-      .addCase(fetchAllOrders.pending, (state) => {
+      .addCase(fetchAllOrders.pending, (state, action) => {
         state.loading = true;
         state.error = null;
+        state.currentRequestId = action.meta.requestId;
       })
       .addCase(fetchAllOrders.fulfilled, (state, action) => {
+        if (state.currentRequestId !== action.meta.requestId) return;
         state.loading = false;
-        state.orders = action.payload;
-        state.totalOrders = action.payload.length;
-
-        // calculate total sales
-        const totalSales = action.payload.reduce((acc, order) => {
-          return acc + order.totalPrice;
-        }, 0);
-        state.totalSales = totalSales;
+        state.currentRequestId = null;
+        state.orders = action.payload.orders;
+        state.totalOrders = action.payload.totalOrders;
+        state.totalSales = action.payload.totalSales;
+        state.currentPage = action.payload.page;
+        state.totalPages = action.payload.totalPages;
+        state.totalFilteredOrders = action.payload.total;
+        state.currentSearch = action.meta.arg?.search?.trim() ?? "";
       })
 
       .addCase(fetchAllOrders.rejected, (state, action) => {
+        if (state.currentRequestId !== action.meta.requestId) return;
         state.loading = false;
-        state.error = action.payload.message;
+        state.currentRequestId = null;
+        if (!action.meta.aborted) {
+          state.error = action.payload?.message ?? action.error.message;
+        }
       })
       // Update Order Status
       .addCase(updateOrderStatus.fulfilled, (state, action) => {
         const updatedOrder = action.payload;
-        console.log("Fetched Orders:", action.payload);
         const orderIndex = state.orders.findIndex(
           (order) => order._id === updatedOrder._id
         );

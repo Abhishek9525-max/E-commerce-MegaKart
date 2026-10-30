@@ -1,32 +1,48 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { FiSearch } from "react-icons/fi";
+import { FiSearch, FiX } from "react-icons/fi";
 import { fetchAllOrders, updateOrderStatus } from "../../redux/slices/adminOrderSlice";
+
+const ORDERS_PER_PAGE = 10;
+const SEARCH_DEBOUNCE_MS = 350;
 
 const OrderManagement = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const { user } = useSelector((state) => state.auth);
-  const { orders, loading, error } = useSelector((state) => state.adminOrders);
+  const {
+    orders,
+    loading,
+    error,
+    totalFilteredOrders,
+    totalPages,
+    currentSearch,
+  } = useSelector((state) => state.adminOrders);
 
   useEffect(() => {
     if (!user || user.role !== "admin") {
       navigate("/");
     } else {
-      dispatch(fetchAllOrders());
+      let request;
+      const timeout = window.setTimeout(() => {
+        request = dispatch(fetchAllOrders({ page, search: searchQuery.trim() }));
+      }, searchQuery.trim() ? SEARCH_DEBOUNCE_MS : 0);
+      return () => {
+        window.clearTimeout(timeout);
+        request?.abort();
+      };
     }
-  }, [dispatch, user, navigate]);
+  }, [dispatch, user, navigate, page, searchQuery]);
 
   const handleStatusChange = (orderId, status) => {
     dispatch(updateOrderStatus({ id: orderId, status }));
   };
-
-  if(loading) return <p className="p-8 text-sm text-[#77766e]">Loading orders…</p>
-  if(error) return <p role="alert" className="border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">Unable to load orders: {error}</p>
 
   const statusStyles = {
     Processing: "bg-amber-50 text-amber-700",
@@ -34,29 +50,13 @@ const OrderManagement = () => {
     Delivered: "bg-emerald-50 text-emerald-700",
     Cancelled: "bg-rose-50 text-rose-700",
   };
-
-  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
-  const filteredOrders = orders.filter((order) => {
-    if (!normalizedSearchQuery) return true;
-
-    const searchableValues = [
-      order._id,
-      order.user?.name,
-      order.user?.email,
-      order.status,
-      order.paymentStatus,
-      order.paymentMethod,
-      order.shippingAddress?.address,
-      order.shippingAddress?.city,
-      order.shippingAddress?.postalCode,
-      order.shippingAddress?.country,
-      ...(order.orderItems ?? []).map((item) => item.name),
-    ];
-
-    return searchableValues.some((value) =>
-      String(value ?? "").toLowerCase().includes(normalizedSearchQuery)
-    );
-  });
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const orderIdSuggestions =
+    isSearchFocused &&
+    /^[a-f\d]{1,24}$/i.test(normalizedSearch) &&
+    currentSearch === searchQuery.trim()
+      ? orders.filter((order) => order._id.toLowerCase().startsWith(normalizedSearch))
+      : [];
 
   return (
     <div className="mx-auto max-w-[1440px] space-y-7">
@@ -66,29 +66,104 @@ const OrderManagement = () => {
           <h1 className="text-3xl font-medium text-[#292b25] sm:text-4xl">Orders &amp; Fulfillment</h1>
           <p className="mt-2 text-sm text-[#77766e]">Track orders and keep each delivery moving.</p>
         </div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <label className="relative block">
-            <FiSearch
-              aria-hidden="true"
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#85847c]"
-            />
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search orders..."
-              aria-label="Search orders"
-              className="w-full border border-[#e7e4dc] bg-white py-2.5 pl-9 pr-3 text-sm text-[#292b25] outline-none transition focus:border-[#414b36] sm:w-64"
-            />
-          </label>
+        <div className="flex flex-wrap items-center gap-3">
           <span className="self-start border border-[#e7e4dc] bg-white px-4 py-2.5 text-xs font-medium text-[#686961] sm:self-auto">
-            {filteredOrders.length} of {orders.length}{" "}
-            {orders.length === 1 ? "order" : "orders"}
+            {totalFilteredOrders} matching{" "}
+            {totalFilteredOrders === 1 ? "order" : "orders"}
           </span>
         </div>
       </header>
 
       <div className="overflow-hidden border border-[#e7e4dc] bg-white shadow-[0_8px_24px_rgba(39,46,32,0.035)]">
+        <div className="border-b border-[#eeece6] p-4 sm:px-6">
+          <label htmlFor="admin-order-search" className="sr-only">
+            Search orders by number, customer, product, or status
+          </label>
+          <div className="relative max-w-lg">
+            <div className="flex items-center gap-3 border border-[#dedbd3] bg-[#fcfbf9] px-3.5 py-2.5 transition focus-within:border-[#68725b] focus-within:ring-2 focus-within:ring-[#414b36]/10">
+              <FiSearch className="shrink-0 text-[#85847c]" aria-hidden="true" />
+              <input
+                id="admin-order-search"
+                type="search"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded={orderIdSuggestions.length > 0}
+                aria-controls="admin-order-id-suggestions"
+                value={searchQuery}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+                onChange={(event) => {
+                  setSearchQuery(event.target.value);
+                  setPage(1);
+                  setExpandedOrderId(null);
+                }}
+                placeholder="Search by order, customer, product, or status"
+                className="min-w-0 flex-1 bg-transparent text-sm text-[#292b25] outline-none placeholder:text-[#a19f96]"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setPage(1);
+                    setExpandedOrderId(null);
+                    setIsSearchFocused(true);
+                  }}
+                  aria-label="Clear order search"
+                  className="text-[#85847c] transition-colors hover:text-[#41443b]"
+                >
+                  <FiX aria-hidden="true" />
+                </button>
+              )}
+            </div>
+            {orderIdSuggestions.length > 0 && (
+              <ul
+                id="admin-order-id-suggestions"
+                role="listbox"
+                aria-label="Matching order IDs"
+                className="absolute left-0 right-0 top-full z-30 mt-1 max-h-72 overflow-y-auto border border-[#dedbd3] bg-white py-1 shadow-lg"
+              >
+                {orderIdSuggestions.map((order) => (
+                  <li key={order._id} role="option" aria-selected="false">
+                    <button
+                      type="button"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        setSearchQuery(order._id);
+                        setPage(1);
+                        setExpandedOrderId(order._id);
+                        setIsSearchFocused(false);
+                      }}
+                      className="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left text-xs transition-colors hover:bg-[#f5f2ed]"
+                    >
+                      <span className="font-medium text-[#414b36]">{order._id}</span>
+                      <span className="truncate text-[#85847c]">
+                        {order.user?.name ?? "Unknown customer"}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+        {loading && (
+          <p
+            role="status"
+            aria-live="polite"
+            className="border-b border-[#eeece6] px-4 py-2 text-xs text-[#77766e] sm:px-6"
+          >
+            {searchQuery.trim() ? "Searching orders…" : "Loading orders…"}
+          </p>
+        )}
+        {error && (
+          <p
+            role="alert"
+            className="border-b border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 sm:px-6"
+          >
+            Unable to load orders: {error}
+          </p>
+        )}
         <div className="overflow-x-auto">
         <table className="min-w-full text-left">
           <thead className="bg-[#faf9f6] text-[10px] uppercase tracking-[0.12em] text-[#85847c]">
@@ -102,9 +177,18 @@ const OrderManagement = () => {
             </tr>
           </thead>
         
-        <tbody className="divide-y divide-[#eeece6] text-sm">
-          {filteredOrders.length > 0 ? (
-            filteredOrders.map((order) => (
+        <tbody
+          aria-busy={loading}
+          className="divide-y divide-[#eeece6] text-sm"
+        >
+          {loading && orders.length === 0 ? (
+            <tr>
+              <td colSpan={6} className="px-6 py-12 text-center text-sm text-[#85847c]">
+                Loading orders…
+              </td>
+            </tr>
+          ) : orders.length > 0 ? (
+            orders.map((order) => (
               <React.Fragment key={order._id}>
               <tr
                 className="transition-colors hover:bg-[#fcfbf9]"
@@ -300,7 +384,7 @@ const OrderManagement = () => {
           ) : (
             <tr>
               <td colSpan={6} className="px-6 py-12 text-center text-sm text-[#85847c]">
-                {normalizedSearchQuery
+                {searchQuery.trim()
                   ? "No orders match your search."
                   : "No orders found."}
               </td>
@@ -309,6 +393,44 @@ const OrderManagement = () => {
         </tbody>
         </table>
         </div>
+        {totalPages > 1 && (
+          <nav
+            aria-label="Order pages"
+            className="flex flex-col gap-3 border-t border-[#eeece6] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+          >
+            <p className="text-xs text-[#77766e]">
+              Showing {(page - 1) * ORDERS_PER_PAGE + 1}–
+              {Math.min(page * ORDERS_PER_PAGE, totalFilteredOrders)} of {totalFilteredOrders} orders
+            </p>
+            <div className="flex items-center justify-between gap-3 sm:justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setPage((currentPage) => Math.max(1, currentPage - 1));
+                  setExpandedOrderId(null);
+                }}
+                disabled={page <= 1 || loading}
+                className="border border-[#dedbd3] px-3 py-2 text-xs font-semibold text-[#59634c] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span className="text-xs text-[#77766e]">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setPage((currentPage) => Math.min(totalPages, currentPage + 1));
+                  setExpandedOrderId(null);
+                }}
+                disabled={page >= totalPages || loading}
+                className="border border-[#dedbd3] px-3 py-2 text-xs font-semibold text-[#59634c] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </nav>
+        )}
       </div>
     </div>
   );

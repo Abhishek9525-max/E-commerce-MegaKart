@@ -277,6 +277,15 @@ const Navbar = () => {
                 {label}
               </Link>
             ))}
+            {user?.role === "admin" && (
+              <Link
+                to="/admin"
+                onClick={closeNavDrawer}
+                className="block border-b border-[#D8D2C8] py-4 text-xs font-semibold uppercase tracking-[0.12em] text-[#414B36]"
+              >
+                Admin Panel
+              </Link>
+            )}
             <Link
               to="/profile"
               onClick={closeNavDrawer}

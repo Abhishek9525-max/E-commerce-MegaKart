@@ -2,6 +2,7 @@ import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import React, { useEffect,useRef,useState } from 'react'
 import { Link } from 'react-router-dom';
 import axios from "axios";
+import { FiStar } from "react-icons/fi";
 import { getProductPricing } from "../../utils/productPricing";
 
 const NewArrivals = () => {
@@ -143,6 +144,20 @@ const NewArrivals = () => {
                   </span>
                 )}
               </p>
+              {Number(product.numReviews) > 0 && (
+                <p
+                  aria-label={`${(Number(product.rating) || 0).toFixed(1)} out of 5 stars from ${product.numReviews} reviews`}
+                  className="mt-2 flex items-center gap-1.5 text-xs text-white/90"
+                >
+                  <FiStar aria-hidden="true" className="h-3.5 w-3.5 fill-[#e7b66c] text-[#e7b66c]" />
+                  <span className="font-medium">
+                    {(Number(product.rating) || 0).toFixed(1)}
+                  </span>
+                  <span>
+                    ({product.numReviews} {Number(product.numReviews) === 1 ? "review" : "reviews"})
+                  </span>
+                </p>
+              )}
               </Link>
 
             </div>

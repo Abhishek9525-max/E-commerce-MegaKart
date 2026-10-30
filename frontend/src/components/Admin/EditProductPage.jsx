@@ -7,6 +7,7 @@ import {
   fetchAdminProductById,
   updateProduct,
 } from "../../redux/slices/adminProductSlice";
+import ProductReviewsPanel from "./ProductReviewsPanel";
 
 const inputClass =
   "w-full border border-[#dedbd3] bg-[#fcfbf9] px-3 py-2.5 text-sm text-[#292b25] outline-none transition focus:border-[#68725b] focus:ring-2 focus:ring-[#414b36]/10";
@@ -365,6 +366,7 @@ const EditProductPage = () => {
           </button>
         </section>
       </form>
+      <ProductReviewsPanel productId={id} />
     </div>
   );
 };
